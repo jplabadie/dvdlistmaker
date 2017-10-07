@@ -7,10 +7,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
@@ -26,7 +24,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.dvdlister.pojos.Items;
+import com.dvdlister.pojos.Credits;
+import com.dvdlister.pojos.Keywords;
+import com.dvdlister.pojos.MovieDetails;
 import com.dvdlister.pojos.UpcResponse;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
     private ListView listView;
     private Button cont_scan_btn, view_data, email_data_btn;
     Hashtable<String,String> titles = new Hashtable<>();
-
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -167,7 +166,6 @@ public class MainActivity extends AppCompatActivity {
     /**
      * A placeholder fragment containing a simple view.
      */
-    @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
     public static class PlaceholderFragment extends Fragment {
 
         public PlaceholderFragment() {
@@ -181,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class HttpRequestTask extends AsyncTask<String, Void, UpcResponse> {
+    private class HttpRequestTitleTask extends AsyncTask<String, Void, UpcResponse> {
         @Override
         protected UpcResponse doInBackground(String... strings) {
             try {
@@ -198,16 +196,73 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(UpcResponse response) {
-            Items item = response.getItems()[0];
-            dbHelper.updateDvd( item );
+            dbHelper.updateDvd(response.getItems()[0] );
+        }
+    }
 
-            TextView title = (TextView) findViewById(R.id.id_label);
-            TextView description = (TextView) findViewById(R.id.content_value);
-            TextView upc = (TextView) findViewById(R.id.id_value);
+    private class HttpRequestCreditsTask extends AsyncTask<String, Void, Credits> {
+        @Override
+        protected Credits doInBackground(String... strings) {
+            try {
+                final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
+                        "/credits?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
+                RestTemplate restTemplate = new RestTemplate();
+                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
-            title.setText(item.getTitle());
-            upc.setText(item.getUpc());
-            description.setText(item.getDescription());
+                return restTemplate.getForObject(url, Credits.class);
+            } catch (Exception e) {
+                Log.e("MainActivity", e.getMessage(), e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Credits credits) {
+            dbHelper.updateDvd( credits );
+        }
+    }
+
+    private class HttpRequestMovieDetailsTask extends AsyncTask<String, Void, MovieDetails> {
+        @Override
+        protected MovieDetails doInBackground(String... strings) {
+            try {
+                final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
+                        "?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
+                RestTemplate restTemplate = new RestTemplate();
+                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+
+                return restTemplate.getForObject(url, MovieDetails.class);
+            } catch (Exception e) {
+                Log.e("MainActivity", e.getMessage(), e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(MovieDetails movie_details) {
+            dbHelper.updateDvd( movie_details );
+        }
+    }
+
+    private class HttpRequestKeywordsTask extends AsyncTask<String, Void, Keywords> {
+        @Override
+        protected Keywords doInBackground(String... strings) {
+            try {
+                final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
+                        "?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
+                RestTemplate restTemplate = new RestTemplate();
+                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+
+                return restTemplate.getForObject(url,Keywords.class);
+            } catch (Exception e) {
+                Log.e("MainActivity", e.getMessage(), e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Keywords keywords) {
+            dbHelper.updateDvd( keywords);
         }
     }
 
@@ -229,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
             }
             else{
                 String res = result.getContents();
-                HttpRequestTask htt = new HttpRequestTask();
+                HttpRequestTitleTask htt = new HttpRequestTitleTask();
                 htt.execute(res);
 
                 dbHelper.addDvd(res);
