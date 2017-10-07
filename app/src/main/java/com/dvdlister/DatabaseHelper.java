@@ -142,10 +142,10 @@ class DatabaseHelper extends SQLiteOpenHelper {
     void updateDvd(Credits credits) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put("qrcode",details.getUpc());
-        cv.put("title",details.getTitle());
-        cv.put("description",details.getDescription());
-        db.update(TBL_DVD_MAIN,cv,"qrcode IS ?", new String[]{details.getUpc()});
+        //cv.put("qrcode",details.getUpc());
+        //cv.put("title",details.getTitle());
+        //cv.put("description",details.getDescription());
+        //db.update(TBL_DVD_MAIN,cv,"qrcode IS ?", new String[]{details.getUpc()});
     }
 
 
