@@ -15,6 +15,7 @@ import com.dvdlister.pojos.Genres;
 import com.dvdlister.pojos.Items;
 import com.dvdlister.pojos.Keywords;
 import com.dvdlister.pojos.MovieDetails;
+import com.dvdlister.pojos.OmdbResponse;
 import com.dvdlister.pojos.Words;
 
 import java.io.File;
@@ -33,8 +34,9 @@ class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TBL_DVD = "dvd_tbl";
     private static final String COL_DVD_QRCODE = "qrcode";
     private static final String COL_DVD_TITLE = "title";
-    public static final String COL_DVD_DESCRIPTION = "description";
-    public static final String COL_DVD_OVERVIEW = "overview";
+    private static final String COL_DVD_CORE_TITLE = "core_title";
+    private static final String COL_DVD_DESCRIPTION = "description";
+    private static final String COL_DVD_PLOT = "overview";
     private static final String COL_DVD_LOCATION = "location";
 
     private static final String TBL_CREDITS = "dvd_credits";
@@ -61,19 +63,21 @@ class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * 
+     *
      * @param db
      */
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL( "CREATE TABLE " + TBL_DVD + "(" + COL_DVD_QRCODE +" TEXT PRIMARY KEY," +
-                COL_DVD_TITLE+" TEXT,"+COL_DVD_DESCRIPTION+" TEXT,"+COL_DVD_OVERVIEW+" TEXT)");
+                COL_DVD_TITLE+" TEXT,"+COL_DVD_TITLE +" TEXT,"+COL_DVD_DESCRIPTION+" TEXT,"+
+                COL_DVD_PLOT +" TEXT)");
         db.execSQL( "CREATE TABLE " + TBL_KEYWORDS + "("+COL_KEYWORD+" TEXT PRIMARY KEY)");
         db.execSQL( "CREATE TABLE " + TBL_CREDITS + "("+COL_NAME + " TEXT PRIMARY KEY)");
         db.execSQL( "CREATE TABLE " + TBL_GENRE + "("+COL_GENRE+" TEXT PRIMARY KEY," +
                 COL_DESCRIPTION+" TEXT)");
         db.execSQL( "CREATE TABLE " + TBL_LOCATION + "("+COL_LOCATION + " TEXT PRIMARY KEY)");
-        //Bridge tables init
+
+        //Bridge tables init starts here
 
         db.execSQL( "CREATE TABLE " + TBL_DVD_KEYWORDS + "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                         COL_DVD_QRCODE+" TEXT,"+COL_KEYWORD+" TEXT,"+
@@ -279,5 +283,26 @@ class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TBL_DVD_LOCATION,null,cv_bridge);
         cv_location.clear();
         cv_bridge.clear();
+    }
+
+    /**
+     *
+     * @param qrcode
+     * @param omdb_response
+     */
+    void updateDvd(String qrcode, OmdbResponse omdb_response) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv_omdb = new ContentValues();
+
+        cv_omdb.put(COL_DVD_CORE_TITLE,omdb_response.getTitle());
+        cv_omdb.put(COL_DVD_PLOT,omdb_response.getPlot());
+        db.insert(TBL_DVD,null,cv_omdb);
+    }
+
+    String getTitleByUPC(String res) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cur = db.rawQuery("SELECT "+COL_DVD_CORE_TITLE+" FROM "+TBL_DVD+" WHERE "+ COL_DVD_QRCODE+ " IS "
+                +res,null);
+        return cur.getString(0);
     }
 }
