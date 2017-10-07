@@ -9,7 +9,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.util.Log;
 
+import com.dvdlister.pojos.Credits;
 import com.dvdlister.pojos.Items;
+import com.dvdlister.pojos.Keywords;
+import com.dvdlister.pojos.MovieDetails;
+
 import java.io.File;
 import java.io.FileWriter;
 
@@ -19,30 +23,39 @@ import java.io.FileWriter;
  * Provides key methods for saving and retrieving dvd meta data to the SQLite database
  */
 
-public class DatabaseHelper extends SQLiteOpenHelper {
+class DatabaseHelper extends SQLiteOpenHelper {
 
-    public static final String DB_NAME = "qrcodes.db";
-    public static final String TBL_DVD_NAME = "dvd_tbl";
+    private static final String DB_NAME = "qrcodes.db";
+    private static final String TBL_DVD_MAIN = "dvd_tbl";
+    private static final String TBL_DVD_CREDITS = "dvd_credits";
+    private static final String TBL_DVD_KEYWORDS = "dvd_keywords";
+    private static final String TBL_DVD_DETAILS = "dvd_details";
     public static final String COL_DVD_ID = "id";
-    public static final String COL_DVD_QRCODE = "qrcode";
-    public static final String COL_DVD_TITLE = "title";
+    private static final String COL_DVD_QRCODE = "qrcode";
+    private static final String COL_DVD_TITLE = "title";
     public static final String COL_DVD_DESCRIPTION = "description";
-    public static final String COL_DVD_LOCATION = "location";
+    private static final String COL_DVD_LOCATION = "location";
 
 
-    public DatabaseHelper(Context context) {
+    DatabaseHelper(Context context) {
         super(context, DB_NAME, null, 1);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL( "CREATE TABLE " + TBL_DVD_NAME + "(QRCODE TEXT PRIMARY KEY," +
-                "TITLE TEXT,DESCRIPTION TEXT,LOCATION TEXT)");
+        db.execSQL( "CREATE TABLE " + TBL_DVD_MAIN + "(QRCODE TEXT PRIMARY KEY," +
+                "TITLE TEXT,DESCRIPTION TEXT,OVERVIEW TEXT,GENRE TEXT,LOCATION TEXT)");
+        db.execSQL( "CREATE TABLE " + TBL_DVD_KEYWORDS + "(QRCODE TEXT PRIMARY KEY," +
+                "TITLE TEXT,DESCRIPTION TEXT,OVERVIEW TEXT,GENRE TEXT,LOCATION TEXT)");
+        db.execSQL( "CREATE TABLE " + TBL_DVD_CREDITS + "(QRCODE TEXT PRIMARY KEY," +
+                "TITLE TEXT,DESCRIPTION TEXT,OVERVIEW TEXT,GENRE TEXT,LOCATION TEXT)");
+        db.execSQL( "CREATE TABLE " + TBL_DVD_DETAILS + "(QRCODE TEXT PRIMARY KEY," +
+                "TITLE TEXT,DESCRIPTION TEXT,OVERVIEW TEXT,GENRE TEXT,LOCATION TEXT)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-        db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD_NAME );
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD_MAIN);
         onCreate(db);
     }
 
@@ -51,13 +64,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @param qrcode the unique qrcode for the dvd
      * @return true indicates success
      */
-    public boolean addDvd(String qrcode){
+    boolean addDvd(String qrcode){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put(COL_DVD_QRCODE,qrcode);
 
         try {
-            long result = db.insertOrThrow(TBL_DVD_NAME, null, cv);
+            long result = db.insertOrThrow(TBL_DVD_MAIN, null, cv);
             return result != -1;
         }
         catch (SQLiteConstraintException e){
@@ -71,7 +84,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      */
     public Cursor getData(){
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor result = db.rawQuery("SELECT * FROM "+TBL_DVD_NAME,null);
+        Cursor result = db.rawQuery("SELECT * FROM "+ TBL_DVD_MAIN,null);
         return result;
     }
 
@@ -80,7 +93,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * Does not include description text.
      * @return the filepath of the output csv
      */
-    public String exportData() {
+    String exportData() {
         SQLiteDatabase db = this.getWritableDatabase();
 
         File exportDir = new File(Environment.getExternalStorageDirectory(), "");
@@ -95,7 +108,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             boolean suc = file.createNewFile();
             CsvWriter csvWrite = new CsvWriter(new FileWriter(file));
             Cursor curCSV = db.rawQuery("SELECT "+COL_DVD_QRCODE+","+COL_DVD_TITLE+","+
-                    COL_DVD_LOCATION + " FROM "+TBL_DVD_NAME,null);
+                    COL_DVD_LOCATION + " FROM "+ TBL_DVD_MAIN,null);
             csvWrite.writeNext(curCSV.getColumnNames());
             while(curCSV.moveToNext())
             {
@@ -117,12 +130,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * Updates an existing DVD entry with extra details obtained via internet API call
      * @param response a pojo populated by restful api call
      */
-    public void updateDvd(Items response) {
+    void updateDvd(Items response) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("qrcode",response.getUpc());
         cv.put("title",response.getTitle());
         cv.put("description",response.getDescription());
-        db.update(TBL_DVD_NAME,cv,"qrcode IS ?", new String[]{response.getUpc()});
+        db.update(TBL_DVD_MAIN,cv,"qrcode IS ?", new String[]{response.getUpc()});
+    }
+
+    void updateDvd(Credits credits) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("qrcode",details.getUpc());
+        cv.put("title",details.getTitle());
+        cv.put("description",details.getDescription());
+        db.update(TBL_DVD_MAIN,cv,"qrcode IS ?", new String[]{details.getUpc()});
+    }
+
+
+    void updateDvd(MovieDetails movie_details) {
+    }
+
+    void updateDvd(Keywords keywords) {
     }
 }
