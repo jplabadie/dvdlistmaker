@@ -11,9 +11,11 @@ import android.util.Log;
 
 import com.dvdlister.pojos.Cast;
 import com.dvdlister.pojos.Credits;
+import com.dvdlister.pojos.Genres;
 import com.dvdlister.pojos.Items;
 import com.dvdlister.pojos.Keywords;
 import com.dvdlister.pojos.MovieDetails;
+import com.dvdlister.pojos.Words;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -186,35 +188,72 @@ class DatabaseHelper extends SQLiteOpenHelper {
     void updateDvd(Items response) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put("qrcode",response.getUpc());
-        cv.put("title",response.getTitle());
-        cv.put("description",response.getDescription());
-        db.update(TBL_DVD,cv,"qrcode IS ?", new String[]{response.getUpc()});
+        cv.put(COL_DVD_QRCODE,response.getUpc());
+        cv.put(COL_DVD_TITLE,response.getTitle());
+        cv.put(COL_DVD_DESCRIPTION,response.getDescription());
+        db.update(TBL_DVD,cv,COL_DVD_QRCODE+" IS ?", new String[]{response.getUpc()});
     }
 
     void updateDvd(String qrcode, Credits credits) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
+        ContentValues cv_creds = new ContentValues();
+        ContentValues cv_bridge = new ContentValues();
 
         for (Cast cast : credits.getCast()){
-            String character = cast.getCharacter();
-            String name = cast.getName();
-            cv.put(COL_NAME,name);
-            cv.put(COL_DVD_QRCODE,qrcode);
-            cv.put(COL_ROLE,character);
-            db.insert(TBL_CREDITS,null,cv);
-            db.insert(TBL_DVD_CREDITS,null,cv);
+            cv_creds.put(COL_NAME,cast.getName());
+            cv_bridge.put(COL_DVD_QRCODE,qrcode);
+            cv_bridge.put(COL_NAME,cast.getName());
+            cv_bridge.put(COL_ROLE,cast.getCharacter());
+            db.insert(TBL_CREDITS,null,cv_creds);
+            db.insert(TBL_DVD_CREDITS,null,cv_bridge);
+            cv_creds.clear();
+            cv_bridge.clear();
         }
-        //cv.put("qrcode",details.getUpc());
-        //cv.put("title",details.getTitle());
-        //cv.put("description",details.getDescription());
-        //db.update(TBL_DVD,cv,"qrcode IS ?", new String[]{details.getUpc()});
     }
 
+    void updateDvd(String qrcode, MovieDetails movie_details) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv_genre = new ContentValues();
+        ContentValues cv_bridge = new ContentValues();
 
-    void updateDvd(MovieDetails movie_details) {
+        for (Genres genre : movie_details.getGenres()){
+            cv_genre.put(COL_GENRE,genre.getName());
+            cv_bridge.put(COL_DVD_QRCODE,qrcode);
+            cv_bridge.put(COL_GENRE,genre.getName());
+            db.insert(TBL_GENRE,null,cv_genre);
+            db.insert(TBL_DVD_GENRE,null,cv_bridge);
+            cv_genre.clear();
+            cv_bridge.clear();
+        }
     }
 
-    void updateDvd(Keywords keywords) {
+    void updateDvd(String qrcode, Keywords keywords) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv_keywords = new ContentValues();
+        ContentValues cv_bridge = new ContentValues();
+
+        for (Words word : keywords.getKeywords()){
+            cv_keywords.put(COL_KEYWORD,word.getName());
+            cv_bridge.put(COL_DVD_QRCODE,qrcode);
+            cv_bridge.put(COL_KEYWORD,word.getName());
+            db.insert(TBL_KEYWORDS,null,cv_keywords);
+            db.insert(TBL_DVD_KEYWORDS,null,cv_bridge);
+            cv_keywords.clear();
+            cv_bridge.clear();
+        }
+    }
+
+    void updateDvd(String qrcode, String location) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv_location = new ContentValues();
+        ContentValues cv_bridge = new ContentValues();
+
+        cv_location.put(COL_LOCATION,location);
+        cv_bridge.put(COL_DVD_QRCODE,qrcode);
+        cv_bridge.put(COL_LOCATION,location);
+        db.insert(TBL_LOCATION,null,cv_location);
+        db.insert(TBL_DVD_LOCATION,null,cv_bridge);
+        cv_location.clear();
+        cv_bridge.clear();
     }
 }
