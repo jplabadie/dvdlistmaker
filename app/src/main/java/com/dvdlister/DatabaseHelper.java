@@ -51,18 +51,19 @@ class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TBL_LOCATION = "dvd_location";
     private static final String COL_LOCATION = "location";
 
-    private static final String TBL_DVD_KEYWORDS = "dvd_to_genre";
+    private static final String TBL_DVD_KEYWORDS = "dvd_to_keywords";
     private static final String TBL_DVD_CREDITS = "dvd_to_credits";
     private static final String TBL_DVD_GENRE = "dvd_to_genre";
     private static final String TBL_DVD_LOCATION = "dvd_to_location";
-
-
-
 
     DatabaseHelper(Context context) {
         super(context, DB_NAME, null, 1);
     }
 
+    /**
+     * 
+     * @param db
+     */
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL( "CREATE TABLE " + TBL_DVD + "(" + COL_DVD_QRCODE +" TEXT PRIMARY KEY," +
@@ -73,23 +74,26 @@ class DatabaseHelper extends SQLiteOpenHelper {
                 COL_DESCRIPTION+" TEXT)");
         db.execSQL( "CREATE TABLE " + TBL_LOCATION + "("+COL_LOCATION + " TEXT PRIMARY KEY)");
         //Bridge tables init
+
         db.execSQL( "CREATE TABLE " + TBL_DVD_KEYWORDS + "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                         COL_DVD_QRCODE+" TEXT,"+COL_KEYWORD+" TEXT,"+
                 "FOREIGN KEY("+COL_DVD_QRCODE+") REFERENCES " + TBL_DVD+"("+COL_DVD_QRCODE+"),"+
                 "FOREIGN KEY("+COL_KEYWORD+") REFERENCES " + TBL_KEYWORDS+"("+COL_KEYWORD+")"+ ")");
+
         db.execSQL( "CREATE TABLE " + TBL_DVD_CREDITS + "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                 COL_DVD_QRCODE+" TEXT,"+COL_NAME+" TEXT,"+
                 "FOREIGN KEY("+COL_DVD_QRCODE+") REFERENCES " + TBL_DVD+"("+COL_DVD_QRCODE+"),"+
                 "FOREIGN KEY("+COL_NAME+") REFERENCES " + TBL_CREDITS+ "("+COL_NAME+")"+ ")");
+
         db.execSQL( "CREATE TABLE " + TBL_DVD_GENRE + "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                 COL_DVD_QRCODE+" TEXT,"+COL_GENRE+" TEXT,"+
                 "FOREIGN KEY("+COL_DVD_QRCODE+") REFERENCES " + TBL_DVD+"("+COL_DVD_QRCODE+"),"+
                 "FOREIGN KEY("+COL_GENRE+") REFERENCES " + TBL_GENRE+ "("+COL_GENRE+")"+ ")");
+
         db.execSQL( "CREATE TABLE " + TBL_DVD_LOCATION + "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                 COL_DVD_QRCODE+" TEXT,"+COL_LOCATION+" TEXT,"+
                 "FOREIGN KEY("+COL_DVD_QRCODE+") REFERENCES " + TBL_DVD+"("+COL_DVD_QRCODE+"),"+
                 "FOREIGN KEY("+COL_LOCATION+") REFERENCES "+TBL_LOCATION+"("+COL_LOCATION+")"+")");
-
     }
 
     /**
@@ -194,6 +198,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TBL_DVD,cv,COL_DVD_QRCODE+" IS ?", new String[]{response.getUpc()});
     }
 
+    /**
+     *
+     * @param qrcode
+     * @param credits
+     */
     void updateDvd(String qrcode, Credits credits) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv_creds = new ContentValues();
@@ -211,6 +220,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    /**
+     *
+     * @param qrcode
+     * @param movie_details
+     */
     void updateDvd(String qrcode, MovieDetails movie_details) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv_genre = new ContentValues();
@@ -227,6 +241,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    /**
+     *
+     * @param qrcode
+     * @param keywords
+     */
     void updateDvd(String qrcode, Keywords keywords) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv_keywords = new ContentValues();
@@ -243,6 +262,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    /**
+     *
+     * @param qrcode
+     * @param location
+     */
     void updateDvd(String qrcode, String location) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv_location = new ContentValues();
