@@ -2,7 +2,6 @@ package com.dvdlister;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -14,11 +13,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -27,6 +24,7 @@ import android.widget.Toast;
 import com.dvdlister.pojos.Credits;
 import com.dvdlister.pojos.Keywords;
 import com.dvdlister.pojos.MovieDetails;
+import com.dvdlister.pojos.OmdbResponse;
 import com.dvdlister.pojos.UpcResponse;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -51,13 +49,13 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_scan:
-                    mTextMessage.setText(R.string.title_home);
+                   // mTextMessage.setText(R.string.title_home);
                     return true;
                 case R.id.navigation_review:
-                    mTextMessage.setText(R.string.title_dashboard);
+                    //mTextMessage.setText(R.string.title_dashboard);
                     return true;
                 case R.id.navigation_send:
-                    mTextMessage.setText(R.string.title_notifications);
+                    //mTextMessage.setText(R.string.title_notifications);
 
                     Intent i = new Intent(Intent.ACTION_SEND);
                     i.setType("message/rfc822");
@@ -88,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
         dbHelper = new DatabaseHelper(this);
         setContentView(R.layout.activity_main);
 
-        mTextMessage = (TextView) findViewById(R.id.message);
 
         String[] PERMISSIONS_STORAGE = {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -129,8 +126,9 @@ public class MainActivity extends AppCompatActivity {
 
                     while(res.moveToNext()){
                         buffer.append("QrCode: " + res.getString(0)+"\n");
-                        buffer.append("Title: " + res.getString(1)+"\n");
-                        buffer.append("Description: " + res.getString(2)+"\n\n");
+                        buffer.append("Box Title: " + res.getString(1)+"\n");
+                        buffer.append("Film Title: " + res.getString(2)+"\n");
+                        buffer.append("Plot: " + res.getString(4)+"\n\n");
                     }
 
                     showMessage( "Data",buffer.toString() );
@@ -163,22 +161,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
-        }
-    }
-
     private class HttpRequestTitleTask extends AsyncTask<String, Void, UpcResponse> {
         @Override
         protected UpcResponse doInBackground(String... strings) {
@@ -201,14 +183,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class HttpRequestCreditsTask extends AsyncTask<String, Void, Credits> {
-
         private String upc = "";
         @Override
         protected Credits doInBackground(String... strings) {
             try {
                 upc = strings[0];
                 final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
-                        "/credits?api_key="+R.string.tmd_api_key;
+                        "/credits?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -232,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 upc = strings[0];
                 final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
-                        "?api_key="+R.string.tmd_api_key;
+                        "?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -256,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 upc = strings[0];
                 final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
-                        "?api_key="+R.string.tmd_api_key;
+                        "?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -273,6 +254,66 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private class HttpRequestOmdbTask extends AsyncTask<String, Void, OmdbResponse> {
+        private String title = "";
+        private String upc = "";
+        @Override
+        protected OmdbResponse doInBackground(String... strings) {
+            title = strings[0];
+            upc = strings[1];
+
+            title.replace("Deluxe Edition", "");
+            title.replace("Special Edition","");
+            title.replace("Anniversary Edition","");
+            title.replace("Extended Cut","");
+            title.replace("Director's Cut","");
+            title.replace("Final Cut","");
+            title.replace("Extended Edition","");
+            title.replace("Collector's Edition","");
+            title.replace("Trilogy","");
+            title.replace("Box Set","");
+            title.replace("10th","");
+            title.replace("20th","");
+            title.replace("30th","");
+            title.replace("40th","");
+            title.replace("50th","");
+            title.replace("60th","");
+            title.replace("70th","");
+            title.replace("80th","");
+            title.replace("90th","");
+            title.replace("100th","");
+
+            // this while loop can be edited so that each failure leads to editing the title
+            // before retrying the API call
+            while(true){
+                try {
+                    final String url = "http://www.omdbapi.com/?t="+title;
+                    RestTemplate restTemplate = new RestTemplate();
+                    restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+
+                    OmdbResponse response = restTemplate.getForObject(url,OmdbResponse.class);
+                    // if the api call doesn't find the title, the response will be
+                    // {"Response":"False","Error":"Movie not found!"}
+                    if(!response.getResponse().equalsIgnoreCase("false"))
+                        return response;
+                } catch (Exception e) {
+                    Log.e("MainActivity", e.getMessage(), e);
+                }
+            }
+           // return null;
+        }
+
+        @Override
+        protected void onPostExecute(OmdbResponse omdb_response) {
+            dbHelper.updateDvd( upc, omdb_response);
+        }
+    }
+
+    /**
+     *
+     * @param title
+     * @param message
+     */
     public void showMessage( String title, String message ){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setCancelable(true);
@@ -281,6 +322,12 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
+    /**
+     *
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode,resultCode,data);
@@ -290,12 +337,23 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this,"Scanning Complete",Toast.LENGTH_LONG).show();
             }
             else{
-                String res = result.getContents();
-                HttpRequestTitleTask htt = new HttpRequestTitleTask();
-                htt.execute(res);
+                String qrcode = result.getContents();
+                HttpRequestTitleTask upcite_api = new HttpRequestTitleTask();
+                HttpRequestCreditsTask moviedb_credits_api = new HttpRequestCreditsTask();
+                HttpRequestKeywordsTask moviedb_keywords_api = new HttpRequestKeywordsTask();
+                HttpRequestMovieDetailsTask moviedb_details_api = new HttpRequestMovieDetailsTask();
+                HttpRequestOmdbTask omdb_api = new HttpRequestOmdbTask();
 
-                dbHelper.addDvd(res);
-                Toast.makeText(this,res,Toast.LENGTH_LONG).show();
+                upcite_api.execute(qrcode); //call upcite API for title and details using qrcode
+                String core_title = dbHelper.getTitleByUPC(qrcode);
+                omdb_api.execute(core_title,qrcode); //call to omdb API for true/core title and details using title
+                moviedb_keywords_api.execute(core_title); // call to themoviedb API using core title for keywords
+                moviedb_credits_api.execute(core_title); // call to themoviedb API using core title for credits
+                moviedb_details_api.execute(core_title);// call to themoviedb API using core title for genres
+
+
+                dbHelper.addDvd(qrcode);
+                Toast.makeText(this,qrcode,Toast.LENGTH_LONG).show();
                 final Activity activity = this;
                 IntentIntegrator zxing_itegrator = new IntentIntegrator(activity);
                 zxing_itegrator.setDesiredBarcodeFormats( IntentIntegrator.ALL_CODE_TYPES );
