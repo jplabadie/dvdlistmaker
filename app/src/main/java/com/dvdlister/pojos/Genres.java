@@ -1,9 +1,11 @@
 package com.dvdlister.pojos;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Created by Jean-Paul on 10/3/2017.
  */
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Genres
 {
     private String id;

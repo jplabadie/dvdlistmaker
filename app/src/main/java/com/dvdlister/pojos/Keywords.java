@@ -1,9 +1,11 @@
 package com.dvdlister.pojos;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Created by Jean-Paul on 10/6/2017.
  */
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Keywords
 {
     private String id;
