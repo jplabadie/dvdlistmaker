@@ -201,11 +201,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class HttpRequestCreditsTask extends AsyncTask<String, Void, Credits> {
+
+        private String upc = "";
         @Override
         protected Credits doInBackground(String... strings) {
             try {
+                upc = strings[0];
                 final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
-                        "/credits?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
+                        "/credits?api_key="+R.string.tmd_api_key;
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -218,16 +221,18 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Credits credits) {
-            dbHelper.updateDvd( credits );
+            dbHelper.updateDvd( upc,credits );
         }
     }
 
     private class HttpRequestMovieDetailsTask extends AsyncTask<String, Void, MovieDetails> {
+        private String upc = "";
         @Override
         protected MovieDetails doInBackground(String... strings) {
             try {
+                upc = strings[0];
                 final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
-                        "?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
+                        "?api_key="+R.string.tmd_api_key;
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -240,16 +245,18 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(MovieDetails movie_details) {
-            dbHelper.updateDvd( movie_details );
+            dbHelper.updateDvd( upc,movie_details );
         }
     }
 
     private class HttpRequestKeywordsTask extends AsyncTask<String, Void, Keywords> {
+        private String upc = "";
         @Override
         protected Keywords doInBackground(String... strings) {
             try {
+                upc = strings[0];
                 final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
-                        "?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
+                        "?api_key="+R.string.tmd_api_key;
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -262,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Keywords keywords) {
-            dbHelper.updateDvd( keywords);
+            dbHelper.updateDvd( upc,keywords);
         }
     }
 
