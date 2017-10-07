@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.util.Log;
 
+import com.dvdlister.pojos.Cast;
 import com.dvdlister.pojos.Credits;
 import com.dvdlister.pojos.Items;
 import com.dvdlister.pojos.Keywords;
@@ -191,9 +192,19 @@ class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TBL_DVD,cv,"qrcode IS ?", new String[]{response.getUpc()});
     }
 
-    void updateDvd(Credits credits) {
+    void updateDvd(String qrcode, Credits credits) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
+
+        for (Cast cast : credits.getCast()){
+            String character = cast.getCharacter();
+            String name = cast.getName();
+            cv.put(COL_NAME,name);
+            cv.put(COL_DVD_QRCODE,qrcode);
+            cv.put(COL_ROLE,character);
+            db.insert(TBL_CREDITS,null,cv);
+            db.insert(TBL_DVD_CREDITS,null,cv);
+        }
         //cv.put("qrcode",details.getUpc());
         //cv.put("title",details.getTitle());
         //cv.put("description",details.getDescription());
