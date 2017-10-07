@@ -8,35 +8,43 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="42dp"
-        android:layout_marginTop="11dp"
-        android:text="TextView" />
+        android:layout_marginStart="23dp"
+        android:layout_marginTop="28dp"
+        android:text="Enter the location of the scanned items:" />
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/textView"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
         android:layout_below="@+id/textView"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="11dp"
-        android:text="TextView" />
+        android:layout_above="@+id/editText">
 
-    <TextView
-        android:id="@+id/textView3"
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignStart="@+id/textView">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/editText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/textView2"
-        android:layout_below="@+id/textView2"
-        android:layout_marginTop="11dp"
-        android:text="TextView" />
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="25dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="location?" />
 
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/textView3"
-        android:layout_below="@+id/textView3"
-        android:layout_marginTop="14dp"
-        android:text="TextView" />
 </RelativeLayout>
