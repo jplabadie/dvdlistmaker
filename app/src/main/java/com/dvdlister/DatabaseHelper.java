@@ -69,7 +69,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL( "CREATE TABLE " + TBL_DVD + "(" + COL_DVD_QRCODE +" TEXT PRIMARY KEY," +
-                COL_DVD_TITLE+" TEXT,"+COL_DVD_TITLE +" TEXT,"+COL_DVD_DESCRIPTION+" TEXT,"+
+                COL_DVD_TITLE+" TEXT,"+COL_DVD_CORE_TITLE +" TEXT,"+COL_DVD_DESCRIPTION+" TEXT,"+
                 COL_DVD_PLOT +" TEXT)");
         db.execSQL( "CREATE TABLE " + TBL_KEYWORDS + "("+COL_KEYWORD+" TEXT PRIMARY KEY)");
         db.execSQL( "CREATE TABLE " + TBL_CREDITS + "("+COL_NAME + " TEXT PRIMARY KEY)");
