@@ -8,7 +8,7 @@ public class Keywords
 {
     private String id;
 
-    private String name;
+    private Words[] words;
 
     public String getId ()
     {
@@ -20,19 +20,19 @@ public class Keywords
         this.id = id;
     }
 
-    public String getName ()
+    public Words[] getKeywords ()
     {
-        return name;
+        return words;
     }
 
-    public void setName (String name)
+    public void setKeywords (Words[] words)
     {
-        this.name = name;
+        this.words = words;
     }
 
     @Override
     public String toString()
     {
-        return "ClassPojo [id = "+id+", name = "+name+"]";
+        return "ClassPojo [id = "+id+", keywords = "+words+"]";
     }
 }
