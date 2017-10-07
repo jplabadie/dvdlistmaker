@@ -15,7 +15,8 @@ import com.dvdlister.pojos.Genres;
 import com.dvdlister.pojos.Items;
 import com.dvdlister.pojos.Keywords;
 import com.dvdlister.pojos.MovieDetails;
-import com.dvdlister.pojos.OmdbResponse;
+import com.dvdlister.pojos.Results;
+import com.dvdlister.pojos.TmdbSearchResponse;
 import com.dvdlister.pojos.Words;
 
 import java.io.File;
@@ -33,6 +34,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String TBL_DVD = "dvd_tbl";
     private static final String COL_DVD_QRCODE = "qrcode";
+    private static final String COL_DVD_TMDB_ID ="tmdb_id";
     private static final String COL_DVD_TITLE = "title";
     private static final String COL_DVD_CORE_TITLE = "core_title";
     private static final String COL_DVD_DESCRIPTION = "description";
@@ -58,6 +60,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TBL_DVD_GENRE = "dvd_to_genre";
     private static final String TBL_DVD_LOCATION = "dvd_to_location";
 
+
     DatabaseHelper(Context context) {
         super(context, DB_NAME, null, 1);
     }
@@ -69,6 +72,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL( "CREATE TABLE " + TBL_DVD + "(" + COL_DVD_QRCODE +" TEXT PRIMARY KEY," +
+                COL_DVD_TMDB_ID +" TEXT,"+
                 COL_DVD_TITLE+" TEXT,"+COL_DVD_CORE_TITLE +" TEXT,"+COL_DVD_DESCRIPTION+" TEXT,"+
                 COL_DVD_PLOT +" TEXT)");
         db.execSQL( "CREATE TABLE " + TBL_KEYWORDS + "("+COL_KEYWORD+" TEXT PRIMARY KEY)");
@@ -194,10 +198,32 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param response a pojo populated by restful api call
      */
     void updateDvd(Items response) {
+        String core_title = response.getTitle();
+        core_title = core_title.replace("Deluxe Edition", "");
+        core_title = core_title.replace("Special Edition","");
+        core_title = core_title.replace("Anniversary Edition","");
+        core_title = core_title.replace("Extended Cut","");
+        core_title = core_title.replace("Director's Cut","");
+        core_title = core_title.replace("Final Cut","");
+        core_title = core_title.replace("Extended Edition","");
+        core_title = core_title.replace("Collector's Edition","");
+        core_title = core_title.replace("Trilogy","");
+        core_title = core_title.replace("Box Set","");
+        core_title = core_title.replace("10th","");
+        core_title = core_title.replace("20th","");
+        core_title = core_title.replace("30th","");
+        core_title = core_title.replace("40th","");
+        core_title = core_title.replace("50th","");
+        core_title = core_title.replace("60th","");
+        core_title = core_title.replace("70th","");
+        core_title = core_title.replace("80th","");
+        core_title = core_title.replace("90th","");
+        core_title = core_title.replace("100th","");
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put(COL_DVD_QRCODE,response.getUpc());
         cv.put(COL_DVD_TITLE,response.getTitle());
+        cv.put(COL_DVD_CORE_TITLE,core_title);
         cv.put(COL_DVD_DESCRIPTION,response.getDescription());
         db.update(TBL_DVD,cv,COL_DVD_QRCODE+" IS ?", new String[]{response.getUpc()});
     }
@@ -281,28 +307,31 @@ class DatabaseHelper extends SQLiteOpenHelper {
         cv_bridge.put(COL_LOCATION,location);
         db.insert(TBL_LOCATION,null,cv_location);
         db.insert(TBL_DVD_LOCATION,null,cv_bridge);
-        cv_location.clear();
-        cv_bridge.clear();
     }
 
-    /**
-     *
-     * @param qrcode
-     * @param omdb_response
-     */
-    void updateDvd(String qrcode, OmdbResponse omdb_response) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv_omdb = new ContentValues();
-
-        cv_omdb.put(COL_DVD_CORE_TITLE,omdb_response.getTitle());
-        cv_omdb.put(COL_DVD_PLOT,omdb_response.getPlot());
-        db.insert(TBL_DVD,null,cv_omdb);
+    String getTitleByUPC(String upc) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cur = db.rawQuery("SELECT "+COL_DVD_TITLE+" FROM "+TBL_DVD+" WHERE "+ COL_DVD_QRCODE+ " IS "
+                +upc,null);
+        cur.moveToNext();
+        return cur.getString(0);
     }
 
-    String getTitleByUPC(String res) {
+    String getCoreTitleByUPC(String upc) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cur = db.rawQuery("SELECT "+COL_DVD_CORE_TITLE+" FROM "+TBL_DVD+" WHERE "+ COL_DVD_QRCODE+ " IS "
-                +res,null);
+                +upc,null);
+        cur.moveToNext();
         return cur.getString(0);
+    }
+
+    void updateDvd(String upc, TmdbSearchResponse response) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        Results res = response.getResults()[0];
+        String tmdbid = res.getId();
+        cv.put(COL_DVD_PLOT,res.getOverview());
+        cv.put(COL_DVD_TMDB_ID,tmdbid);
+        db.insert(TBL_DVD,null,cv);
     }
 }
