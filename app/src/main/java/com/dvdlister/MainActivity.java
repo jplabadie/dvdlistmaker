@@ -24,7 +24,8 @@ import android.widget.Toast;
 import com.dvdlister.pojos.Credits;
 import com.dvdlister.pojos.Keywords;
 import com.dvdlister.pojos.MovieDetails;
-import com.dvdlister.pojos.OmdbResponse;
+import com.dvdlister.pojos.Results;
+import com.dvdlister.pojos.TmdbSearchResponse;
 import com.dvdlister.pojos.UpcResponse;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -126,9 +127,9 @@ public class MainActivity extends AppCompatActivity {
 
                     while(res.moveToNext()){
                         buffer.append("QrCode: " + res.getString(0)+"\n");
-                        buffer.append("Box Title: " + res.getString(1)+"\n");
-                        buffer.append("Film Title: " + res.getString(2)+"\n");
-                        buffer.append("Plot: " + res.getString(4)+"\n\n");
+                        buffer.append("Box Title: " + res.getString(2)+"\n");
+                        buffer.append("Film Title: " + res.getString(3)+"\n");
+                        buffer.append("Description: " + res.getString(4)+"\n\n");
                     }
 
                     showMessage( "Data",buffer.toString() );
@@ -162,10 +163,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class HttpRequestTitleTask extends AsyncTask<String, Void, UpcResponse> {
+        private String upc;
         @Override
         protected UpcResponse doInBackground(String... strings) {
             try {
-                final String url = "https://api.upcitemdb.com/prod/trial/lookup?upc="+strings[0];
+                upc = strings[0];
+                final String url = "https://api.upcitemdb.com/prod/trial/lookup?title="+upc;
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
                 UpcResponse response = restTemplate.getForObject(url, UpcResponse.class);
@@ -178,24 +181,63 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(UpcResponse response) {
-            String qrcode = response.getCode();
-            dbHelper.addDvd(qrcode);
+            dbHelper.addDvd(upc);
             dbHelper.updateDvd(response.getItems()[0] );
 
-            HttpRequestOmdbTask omdb_api = new HttpRequestOmdbTask();
-            String core_title = dbHelper.getTitleByUPC(qrcode);
-            omdb_api.execute(core_title,qrcode); //call to omdb API for true/core title and details using title
+            String core_title = dbHelper.getCoreTitleByUPC(upc);
+
+            HttpRequestSearchTask search = new HttpRequestSearchTask();
+            search.execute(upc,core_title);// call to themoviedb API using core title for genres
         }
     }
 
+    private class HttpRequestSearchTask extends AsyncTask<String, Void, TmdbSearchResponse> {
+        private String title = "";
+        private String upc = "";
+        @Override
+        protected TmdbSearchResponse doInBackground(String... strings) {
+            try {
+                upc = strings[0];
+                title = strings[1];
+
+                final String url = "https://api.themoviedb.org/3/search/movie" +
+                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US&query="+
+                        title +"&page=1&include_adult=true";
+                RestTemplate restTemplate = new RestTemplate();
+                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+
+                return restTemplate.getForObject(url, TmdbSearchResponse.class);
+            } catch (Exception e) {
+                Log.e("MainActivity", e.getMessage(), e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(TmdbSearchResponse response) {
+            Results res = response.getResults()[0];
+            String id = res.getId();
+            dbHelper.updateDvd(upc, response );
+            HttpRequestMovieDetailsTask moviedb_details_api = new HttpRequestMovieDetailsTask();
+            moviedb_details_api.execute(upc,id);// call to themoviedb API using core title for genres
+            HttpRequestCreditsTask moviedb_credits_api = new HttpRequestCreditsTask();
+            HttpRequestKeywordsTask moviedb_keywords_api = new HttpRequestKeywordsTask();
+            moviedb_keywords_api.execute(upc,id); // call to themoviedb API using core title for keywords
+            moviedb_credits_api.execute(upc,id); // call to themoviedb API using core title for credits
+        }
+    }
     private class HttpRequestCreditsTask extends AsyncTask<String, Void, Credits> {
         private String upc = "";
+        private String title ="";
         @Override
         protected Credits doInBackground(String... strings) {
             try {
                 upc = strings[0];
-                final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
-                        "/credits?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
+                title = strings[1];
+
+                final String url = "https://api.themoviedb.org/3/movie" +
+                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US&query="+
+                        title +"&page=1&include_adult=true";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -214,12 +256,16 @@ public class MainActivity extends AppCompatActivity {
 
     private class HttpRequestMovieDetailsTask extends AsyncTask<String, Void, MovieDetails> {
         private String upc = "";
+        private String title ="";
         @Override
         protected MovieDetails doInBackground(String... strings) {
             try {
                 upc = strings[0];
-                final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
-                        "?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
+                title = strings[1];
+
+                final String url = "https://api.themoviedb.org/3/movie" +
+                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US&query="+
+                        title +"&page=1&include_adult=true";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -238,12 +284,16 @@ public class MainActivity extends AppCompatActivity {
 
     private class HttpRequestKeywordsTask extends AsyncTask<String, Void, Keywords> {
         private String upc = "";
+        private String title ="";
         @Override
         protected Keywords doInBackground(String... strings) {
             try {
                 upc = strings[0];
-                final String url = "https://api.themoviedb.org/3/movie/"+strings[0]+
-                        "?api_key="+"3a18eb07897280fb9c416fe02b7ddac8";
+                title = strings[1];
+
+                final String url = "https://api.themoviedb.org/3/search/movie" +
+                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US&query="+
+                        title +"&page=1&include_adult=true";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -257,69 +307,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Keywords keywords) {
             dbHelper.updateDvd( upc,keywords);
-        }
-    }
-
-    private class HttpRequestOmdbTask extends AsyncTask<String, Void, OmdbResponse> {
-        private String title = "";
-        private String upc = "";
-        @Override
-        protected OmdbResponse doInBackground(String... strings) {
-            title = strings[0];
-            upc = strings[1];
-
-            title.replace("Deluxe Edition", "");
-            title.replace("Special Edition","");
-            title.replace("Anniversary Edition","");
-            title.replace("Extended Cut","");
-            title.replace("Director's Cut","");
-            title.replace("Final Cut","");
-            title.replace("Extended Edition","");
-            title.replace("Collector's Edition","");
-            title.replace("Trilogy","");
-            title.replace("Box Set","");
-            title.replace("10th","");
-            title.replace("20th","");
-            title.replace("30th","");
-            title.replace("40th","");
-            title.replace("50th","");
-            title.replace("60th","");
-            title.replace("70th","");
-            title.replace("80th","");
-            title.replace("90th","");
-            title.replace("100th","");
-
-            // this while loop can be edited so that each failure leads to editing the title
-            // before retrying the API call
-            while(true){
-                try {
-                    final String url = "http://www.omdbapi.com/?t="+title;
-                    RestTemplate restTemplate = new RestTemplate();
-                    restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
-
-                    OmdbResponse response = restTemplate.getForObject(url,OmdbResponse.class);
-                    // if the api call doesn't find the title, the response will be
-                    // {"Response":"False","Error":"Movie not found!"}
-                    if(!response.getResponse().equalsIgnoreCase("false"))
-                        return response;
-                } catch (Exception e) {
-                    Log.e("MainActivity", e.getMessage(), e);
-                }
-            }
-           // return null;
-        }
-
-        @Override
-        protected void onPostExecute(OmdbResponse omdb_response) {
-            dbHelper.updateDvd( upc, omdb_response);
-            String core_title = dbHelper.getTitleByUPC(upc);
-
-            HttpRequestCreditsTask moviedb_credits_api = new HttpRequestCreditsTask();
-            HttpRequestKeywordsTask moviedb_keywords_api = new HttpRequestKeywordsTask();
-            HttpRequestMovieDetailsTask moviedb_details_api = new HttpRequestMovieDetailsTask();
-            moviedb_keywords_api.execute(core_title); // call to themoviedb API using core title for keywords
-            moviedb_credits_api.execute(core_title); // call to themoviedb API using core title for credits
-            moviedb_details_api.execute(core_title);// call to themoviedb API using core title for genres
         }
     }
 
