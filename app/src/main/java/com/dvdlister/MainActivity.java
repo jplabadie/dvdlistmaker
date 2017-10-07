@@ -178,7 +178,13 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(UpcResponse response) {
+            String qrcode = response.getCode();
+            dbHelper.addDvd(qrcode);
             dbHelper.updateDvd(response.getItems()[0] );
+
+            HttpRequestOmdbTask omdb_api = new HttpRequestOmdbTask();
+            String core_title = dbHelper.getTitleByUPC(qrcode);
+            omdb_api.execute(core_title,qrcode); //call to omdb API for true/core title and details using title
         }
     }
 
@@ -306,6 +312,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(OmdbResponse omdb_response) {
             dbHelper.updateDvd( upc, omdb_response);
+            String core_title = dbHelper.getTitleByUPC(upc);
+
+            HttpRequestCreditsTask moviedb_credits_api = new HttpRequestCreditsTask();
+            HttpRequestKeywordsTask moviedb_keywords_api = new HttpRequestKeywordsTask();
+            HttpRequestMovieDetailsTask moviedb_details_api = new HttpRequestMovieDetailsTask();
+            moviedb_keywords_api.execute(core_title); // call to themoviedb API using core title for keywords
+            moviedb_credits_api.execute(core_title); // call to themoviedb API using core title for credits
+            moviedb_details_api.execute(core_title);// call to themoviedb API using core title for genres
         }
     }
 
@@ -339,20 +353,9 @@ public class MainActivity extends AppCompatActivity {
             else{
                 String qrcode = result.getContents();
                 HttpRequestTitleTask upcite_api = new HttpRequestTitleTask();
-                HttpRequestCreditsTask moviedb_credits_api = new HttpRequestCreditsTask();
-                HttpRequestKeywordsTask moviedb_keywords_api = new HttpRequestKeywordsTask();
-                HttpRequestMovieDetailsTask moviedb_details_api = new HttpRequestMovieDetailsTask();
-                HttpRequestOmdbTask omdb_api = new HttpRequestOmdbTask();
 
                 upcite_api.execute(qrcode); //call upcite API for title and details using qrcode
-                String core_title = dbHelper.getTitleByUPC(qrcode);
-                omdb_api.execute(core_title,qrcode); //call to omdb API for true/core title and details using title
-                moviedb_keywords_api.execute(core_title); // call to themoviedb API using core title for keywords
-                moviedb_credits_api.execute(core_title); // call to themoviedb API using core title for credits
-                moviedb_details_api.execute(core_title);// call to themoviedb API using core title for genres
 
-
-                dbHelper.addDvd(qrcode);
                 Toast.makeText(this,qrcode,Toast.LENGTH_LONG).show();
                 final Activity activity = this;
                 IntentIntegrator zxing_itegrator = new IntentIntegrator(activity);
