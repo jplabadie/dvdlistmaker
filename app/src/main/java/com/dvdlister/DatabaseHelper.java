@@ -297,7 +297,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param qrcode
      * @param location
      */
-    void updateDvd(String qrcode, String location) {
+    void updateDvdLocation(String qrcode, String location) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv_location = new ContentValues();
         ContentValues cv_bridge = new ContentValues();
