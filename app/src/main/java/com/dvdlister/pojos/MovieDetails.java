@@ -38,7 +38,7 @@ public class MovieDetails
 
     private Production_companies[] production_companies;
 
-    private boolean belongs_to_collection;
+    //private String belongs_to_collection;
 
     private String imdb_id;
 
@@ -208,15 +208,15 @@ public class MovieDetails
         this.production_companies = production_companies;
     }
 
-    public boolean getBelongs_to_collection ()
-{
-    return belongs_to_collection;
-}
-
-    public void setBelongs_to_collection (boolean belongs_to_collection)
-    {
-        this.belongs_to_collection = belongs_to_collection;
-    }
+//    public String getBelongs_to_collection ()
+//{
+//    return belongs_to_collection;
+//}
+//
+//    public void setBelongs_to_collection (String belongs_to_collection)
+//    {
+//        this.belongs_to_collection = belongs_to_collection;
+//    }
 
     public String getImdb_id ()
     {
@@ -311,6 +311,6 @@ public class MovieDetails
     @Override
     public String toString()
     {
-        return "ClassPojo [budget = "+budget+", vote_average = "+vote_average+", backdrop_path = "+backdrop_path+", genres = "+genres+", status = "+status+", runtime = "+runtime+", spoken_languages = "+spoken_languages+", adult = "+adult+", homepage = "+homepage+", id = "+id+", production_countries = "+production_countries+", title = "+title+", original_language = "+original_language+", overview = "+overview+", production_companies = "+production_companies+", belongs_to_collection = "+belongs_to_collection+", imdb_id = "+imdb_id+", release_date = "+release_date+", original_title = "+original_title+", vote_count = "+vote_count+", poster_path = "+poster_path+", video = "+video+", tagline = "+tagline+", revenue = "+revenue+", popularity = "+popularity+"]";
+        return "ClassPojo [budget = "+budget+", vote_average = "+vote_average+", backdrop_path = "+backdrop_path+", genres = "+genres+", status = "+status+", runtime = "+runtime+", spoken_languages = "+spoken_languages+", adult = "+adult+", homepage = "+homepage+", id = "+id+", production_countries = "+production_countries+", title = "+title+", original_language = "+original_language+", overview = "+overview+", production_companies = "+production_companies+", imdb_id = "+imdb_id+", release_date = "+release_date+", original_title = "+original_title+", vote_count = "+vote_count+", poster_path = "+poster_path+", video = "+video+", tagline = "+tagline+", revenue = "+revenue+", popularity = "+popularity+"]";
     }
 }

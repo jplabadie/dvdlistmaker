@@ -33,7 +33,7 @@ import com.google.zxing.integration.android.IntentResult;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Hashtable;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTextMessage;
     private ListView listView;
     private Button cont_scan_btn, view_data, email_data_btn;
-    Hashtable<String,String> titles = new Hashtable<>();
+    private ArrayList<MovieTuple> fresh_scans = new ArrayList<>();
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
         protected UpcResponse doInBackground(String... strings) {
             try {
                 upc = strings[0];
-                final String url = "https://api.upcitemdb.com/prod/trial/lookup?title="+upc;
+                final String url = "https://api.upcitemdb.com/prod/trial/lookup?upc="+upc;
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
                 UpcResponse response = restTemplate.getForObject(url, UpcResponse.class);
@@ -235,9 +235,8 @@ public class MainActivity extends AppCompatActivity {
                 upc = strings[0];
                 title = strings[1];
 
-                final String url = "https://api.themoviedb.org/3/movie" +
-                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US&query="+
-                        title +"&page=1&include_adult=true";
+                final String url = "https://api.themoviedb.org/3/movie/" + title +
+                        "/credits?api_key=3a18eb07897280fb9c416fe02b7ddac8";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -263,9 +262,8 @@ public class MainActivity extends AppCompatActivity {
                 upc = strings[0];
                 title = strings[1];
 
-                final String url = "https://api.themoviedb.org/3/movie" +
-                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US&query="+
-                        title +"&page=1&include_adult=true";
+                final String url = "https://api.themoviedb.org/3/movie/"+title+
+                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -290,6 +288,8 @@ public class MainActivity extends AppCompatActivity {
             try {
                 upc = strings[0];
                 title = strings[1];
+
+                fresh_scans.add(new MovieTuple(upc,title));
 
                 final String url = "https://api.themoviedb.org/3/search/movie" +
                         "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US&query="+
@@ -334,8 +334,11 @@ public class MainActivity extends AppCompatActivity {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode,resultCode,data);
         if(result != null){
             if( result.getContents()==null ){
-
+                //Toast the user, then allow them to review the scan results
                 Toast.makeText(this,"Scanning Complete",Toast.LENGTH_LONG).show();
+                Intent review = new Intent( this, ReviewActivity.class );
+                review.putExtra("FreshScans",fresh_scans);
+                startActivity(review);
             }
             else{
                 String qrcode = result.getContents();
