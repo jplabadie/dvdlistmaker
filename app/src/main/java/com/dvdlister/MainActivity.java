@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private TextView mTextMessage;
     private ListView listView;
-    private Button cont_scan_btn, view_data, email_data_btn;
+    private Button cont_scan_btn, view_data, email_data_btn, erase_db_btn;
     private ArrayList<MovieTuple> fresh_scans = new ArrayList<>();
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -121,19 +121,26 @@ public class MainActivity extends AppCompatActivity {
         view_data.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View view){
-                Cursor res = dbHelper.getData();
+                Cursor res = dbHelper.getPrimaryData();
                 if( res.getCount() != 0 ){
                     StringBuffer buffer = new StringBuffer();
 
                     while(res.moveToNext()){
                         buffer.append("QrCode: " + res.getString(0)+"\n");
-                        buffer.append("Box Title: " + res.getString(2)+"\n");
-                        buffer.append("Film Title: " + res.getString(3)+"\n");
-                        buffer.append("Description: " + res.getString(4)+"\n\n");
+                        buffer.append("Film Title: " + res.getString(1)+"\n");
+                        buffer.append("Location: " + res.getString(2)+"\n\n");
                     }
 
                     showMessage( "Data",buffer.toString() );
                 }
+            }
+        });
+
+        erase_db_btn = (Button) findViewById(R.id.delete_btn);
+        erase_db_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dbHelper.eraseDb();
             }
         });
     }
@@ -336,9 +343,10 @@ public class MainActivity extends AppCompatActivity {
             if( result.getContents()==null ){
                 //Toast the user, then allow them to review the scan results
                 Toast.makeText(this,"Scanning Complete",Toast.LENGTH_LONG).show();
+                super.onActivityResult(requestCode, resultCode, data);
                 Intent review = new Intent( this, ReviewActivity.class );
                 review.putExtra("FreshScans",fresh_scans);
-                startActivity(review);
+                this.startActivity(review);
             }
             else{
                 String qrcode = result.getContents();
@@ -358,5 +366,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
+
     }
 }
