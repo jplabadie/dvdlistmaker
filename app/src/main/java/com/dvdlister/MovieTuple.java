@@ -5,4 +5,24 @@ package com.dvdlister;
  */
 
 public class MovieTuple {
+    private String upc="";
+    private String title="";
+
+    MovieTuple (String upc, String title){
+        upc = upc;
+        title = title;
+    }
+
+    String getTitle(){
+        return title;
+    }
+
+    String getUpc(){
+        return upc;
+    }
+
+    @Override
+    public String toString(){
+        return upc+" "+title;
+    }
 }
