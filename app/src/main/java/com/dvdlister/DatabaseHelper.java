@@ -21,6 +21,7 @@ import com.dvdlister.pojos.Words;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.util.Arrays;
 
 /**
  * Created by Jean-Paul on 9/20/2017.
@@ -39,11 +40,10 @@ class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COL_DVD_CORE_TITLE = "core_title";
     private static final String COL_DVD_DESCRIPTION = "description";
     private static final String COL_DVD_PLOT = "overview";
-    private static final String COL_DVD_LOCATION = "location";
+    private static final String TBL_DVD_VIEW = "dvd_view";
 
     private static final String TBL_CREDITS = "dvd_credits";
     private static final String COL_NAME = "name";
-    private static final String COL_ROLE = "role";
 
     private static final String TBL_KEYWORDS = "dvd_keywords";
     private static final String COL_KEYWORD = "keyword";
@@ -57,6 +57,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String TBL_DVD_KEYWORDS = "dvd_to_keywords";
     private static final String TBL_DVD_CREDITS = "dvd_to_credits";
+    private static final String COL_ROLE = "role";
     private static final String TBL_DVD_GENRE = "dvd_to_genre";
     private static final String TBL_DVD_LOCATION = "dvd_to_location";
 
@@ -66,42 +67,65 @@ class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /**
-     *
-     * @param db
+     * Initializes the database
+     * @param db a reference to the database object
      */
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL( "CREATE TABLE " + TBL_DVD + "(" + COL_DVD_QRCODE +" TEXT PRIMARY KEY," +
-                COL_DVD_TMDB_ID +" TEXT,"+
-                COL_DVD_TITLE+" TEXT,"+COL_DVD_CORE_TITLE +" TEXT,"+COL_DVD_DESCRIPTION+" TEXT,"+
-                COL_DVD_PLOT +" TEXT)");
-        db.execSQL( "CREATE TABLE " + TBL_KEYWORDS + "("+COL_KEYWORD+" TEXT PRIMARY KEY)");
-        db.execSQL( "CREATE TABLE " + TBL_CREDITS + "("+COL_NAME + " TEXT PRIMARY KEY)");
-        db.execSQL( "CREATE TABLE " + TBL_GENRE + "("+COL_GENRE+" TEXT PRIMARY KEY," +
-                COL_DESCRIPTION+" TEXT)");
-        db.execSQL( "CREATE TABLE " + TBL_LOCATION + "("+COL_LOCATION + " TEXT PRIMARY KEY)");
 
-        //Bridge tables init starts here
+        //Standalone tables (DVDs,Keywords,Credits,Genres,Locations)
+        db.execSQL( "CREATE TABLE " + TBL_DVD +
+                "(" + COL_DVD_QRCODE + " TEXT PRIMARY KEY," +
+                COL_DVD_TMDB_ID + " TEXT," +
+                COL_DVD_TITLE + " TEXT," +
+                COL_DVD_CORE_TITLE + " TEXT," +
+                COL_DVD_DESCRIPTION + " TEXT," +
+                COL_DVD_PLOT + " TEXT)" );
+        db.execSQL( "CREATE TABLE " + TBL_KEYWORDS +
+                "(" + COL_KEYWORD + " TEXT PRIMARY KEY)" );
+        db.execSQL( "CREATE TABLE " + TBL_CREDITS +
+                "(" + COL_NAME + " TEXT PRIMARY KEY)" );
+        db.execSQL( "CREATE TABLE " + TBL_GENRE +
+                "(" + COL_GENRE + " TEXT PRIMARY KEY," +
+                COL_DESCRIPTION + " TEXT)" );
+        db.execSQL( "CREATE TABLE " + TBL_LOCATION +
+                "(" + COL_LOCATION + " TEXT PRIMARY KEY)" );
 
-        db.execSQL( "CREATE TABLE " + TBL_DVD_KEYWORDS + "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        COL_DVD_QRCODE+" TEXT,"+COL_KEYWORD+" TEXT,"+
-                "FOREIGN KEY("+COL_DVD_QRCODE+") REFERENCES " + TBL_DVD+"("+COL_DVD_QRCODE+"),"+
-                "FOREIGN KEY("+COL_KEYWORD+") REFERENCES " + TBL_KEYWORDS+"("+COL_KEYWORD+")"+ ")");
+        //Bridge Tables linking standalone tables
+        db.execSQL( "CREATE TABLE " + TBL_DVD_KEYWORDS +
+                "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                COL_DVD_QRCODE + " TEXT," +
+                COL_KEYWORD + " TEXT," +
+                "FOREIGN KEY(" + COL_DVD_QRCODE + ") REFERENCES " + TBL_DVD+"("+COL_DVD_QRCODE+"),"+
+                "FOREIGN KEY("+COL_KEYWORD+") REFERENCES " + TBL_KEYWORDS+"("+COL_KEYWORD+")"+ ")" );
 
-        db.execSQL( "CREATE TABLE " + TBL_DVD_CREDITS + "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
-                COL_DVD_QRCODE+" TEXT,"+COL_NAME+" TEXT,"+
-                "FOREIGN KEY("+COL_DVD_QRCODE+") REFERENCES " + TBL_DVD+"("+COL_DVD_QRCODE+"),"+
-                "FOREIGN KEY("+COL_NAME+") REFERENCES " + TBL_CREDITS+ "("+COL_NAME+")"+ ")");
+        db.execSQL( "CREATE TABLE " + TBL_DVD_CREDITS +
+                "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                COL_DVD_QRCODE+" TEXT," +
+                COL_NAME+" TEXT," +
+                COL_ROLE+" TEXT," +
+                "FOREIGN KEY(" + COL_DVD_QRCODE+") REFERENCES " + TBL_DVD + "("+COL_DVD_QRCODE+"),"+
+                "FOREIGN KEY(" + COL_NAME + ") REFERENCES " + TBL_CREDITS + "("+COL_NAME+")"+ ")");
 
-        db.execSQL( "CREATE TABLE " + TBL_DVD_GENRE + "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
-                COL_DVD_QRCODE+" TEXT,"+COL_GENRE+" TEXT,"+
+        db.execSQL( "CREATE TABLE " + TBL_DVD_GENRE +
+                "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                COL_DVD_QRCODE + " TEXT," +
+                COL_GENRE+" TEXT,"+
                 "FOREIGN KEY("+COL_DVD_QRCODE+") REFERENCES " + TBL_DVD+"("+COL_DVD_QRCODE+"),"+
                 "FOREIGN KEY("+COL_GENRE+") REFERENCES " + TBL_GENRE+ "("+COL_GENRE+")"+ ")");
 
-        db.execSQL( "CREATE TABLE " + TBL_DVD_LOCATION + "(ID INTEGER PRIMARY KEY AUTOINCREMENT," +
-                COL_DVD_QRCODE+" TEXT,"+COL_LOCATION+" TEXT,"+
+        db.execSQL( "CREATE TABLE " + TBL_DVD_LOCATION +
+                "(ID INTEGER PRIMARY KEY AUTOINCREMENT," + COL_DVD_QRCODE +
+                " TEXT,"+COL_LOCATION+" TEXT,"+
                 "FOREIGN KEY("+COL_DVD_QRCODE+") REFERENCES " + TBL_DVD+"("+COL_DVD_QRCODE+"),"+
                 "FOREIGN KEY("+COL_LOCATION+") REFERENCES "+TBL_LOCATION+"("+COL_LOCATION+")"+")");
+
+        db.execSQL( "CREATE VIEW " + TBL_DVD_VIEW + " AS " +
+                "SELECT " + TBL_DVD +"."+COL_DVD_QRCODE + " AS " + COL_DVD_QRCODE + "," +
+                "SELECT " + TBL_DVD +"."+COL_DVD_CORE_TITLE + " AS " + COL_DVD_CORE_TITLE + "," +
+                "SELECT " + TBL_DVD_LOCATION +"."+COL_LOCATION + " AS " + COL_LOCATION +"," +
+                "FROM " +TBL_DVD + " LEFT JOIN "+ TBL_DVD_LOCATION+
+                    " ON "+TBL_DVD+"."+COL_DVD_QRCODE +"="+TBL_DVD_LOCATION+"."+COL_DVD_QRCODE);
     }
 
     /**
@@ -134,25 +158,25 @@ class DatabaseHelper extends SQLiteOpenHelper {
     boolean addDvd(String qrcode){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put(COL_DVD_QRCODE,qrcode);
+        cv.put( COL_DVD_QRCODE,qrcode );
 
         try {
             long result = db.insertOrThrow(TBL_DVD, null, cv);
             return result != -1;
         }
         catch (SQLiteConstraintException e){
+            Log.e("MainActivity", e.getMessage(), e);
             return false;
         }
     }
 
     /**
-     * Provides a cursor package of data from the DVD Table
+     * Provides a cursor package of data from the DVD Table View
      * @return the cursor data of the DVD Table in the db
      */
-    public Cursor getData(){
+    Cursor getPrimaryData(){
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor result = db.rawQuery("SELECT * FROM "+ TBL_DVD,null);
-        return result;
+        return db.query( TBL_DVD_VIEW,null,null,null,null,null,null ); //pull main table
     }
 
     /**
@@ -174,13 +198,21 @@ class DatabaseHelper extends SQLiteOpenHelper {
         {
             boolean suc = file.createNewFile();
             CsvWriter csvWrite = new CsvWriter(new FileWriter(file));
-            Cursor curCSV = db.rawQuery("SELECT "+COL_DVD_QRCODE+","+COL_DVD_TITLE+","+
-                    COL_DVD_LOCATION + " FROM "+ TBL_DVD,null);
-            csvWrite.writeNext(curCSV.getColumnNames());
+            Cursor loc = db.rawQuery("SELECT * FROM "+ TBL_DVD_LOCATION,null);
+            Cursor curCSV = db.rawQuery("SELECT "+COL_DVD_QRCODE+","+COL_DVD_TITLE+
+                    " FROM "+ TBL_DVD,null);
+            String[] cols = new String[curCSV.getColumnCount()+1];
+            String[] new_cols = Arrays.copyOf(curCSV.getColumnNames(),cols.length+1);
+            new_cols[cols.length] = TBL_DVD_LOCATION;
+            csvWrite.writeNext(new_cols);
+
             while(curCSV.moveToNext())
             {
-                //Which column you want to exprort
-                String arrStr[] ={curCSV.getString(0),curCSV.getString(1), curCSV.getString(2)};
+                //Which column you want to export
+                String qrcode = curCSV.getString(0);
+                String title = curCSV.getString(1);
+                String location = loc.getString(0);
+                String arrStr[] ={qrcode,title, location};
                 csvWrite.writeNext(arrStr);
             }
             csvWrite.close();
@@ -198,7 +230,12 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param response a pojo populated by restful api call
      */
     void updateDvd(Items response) {
+        if(response == null) {
+            Log.e("MainActivity","Items for updateDvd was null! Update failed.");
+            return;
+        }
         String core_title = response.getTitle();
+        core_title.replaceAll("(\\(.*\\))","");
         core_title = core_title.replace("Deluxe Edition", "");
         core_title = core_title.replace("Special Edition","");
         core_title = core_title.replace("Anniversary Edition","");
@@ -234,6 +271,10 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param credits
      */
     void updateDvd(String qrcode, Credits credits) {
+        if( credits == null) {
+            Log.e("MainActivity","Credits for upc "+qrcode+" was null! Ignoring.");
+            return;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv_creds = new ContentValues();
         ContentValues cv_bridge = new ContentValues();
@@ -243,7 +284,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
             cv_bridge.put(COL_DVD_QRCODE,qrcode);
             cv_bridge.put(COL_NAME,cast.getName());
             cv_bridge.put(COL_ROLE,cast.getCharacter());
-            db.insert(TBL_CREDITS,null,cv_creds);
+            db.insertWithOnConflict(TBL_CREDITS,null,cv_creds,SQLiteDatabase.CONFLICT_IGNORE);
             db.insert(TBL_DVD_CREDITS,null,cv_bridge);
             cv_creds.clear();
             cv_bridge.clear();
@@ -256,6 +297,10 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param movie_details
      */
     void updateDvd(String qrcode, MovieDetails movie_details) {
+        if(movie_details == null) {
+            Log.e("MainActivity","MovieDetails for upc "+qrcode+" was null! Ignoring.");
+            return;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv_genre = new ContentValues();
         ContentValues cv_bridge = new ContentValues();
@@ -277,6 +322,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param keywords
      */
     void updateDvd(String qrcode, Keywords keywords) {
+
+        if(keywords == null || keywords.getKeywords() == null) {
+            Log.e("MainActivity","Keywords for upc "+qrcode+" was null! Ignoring.");
+            return;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv_keywords = new ContentValues();
         ContentValues cv_bridge = new ContentValues();
@@ -319,13 +369,20 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     String getCoreTitleByUPC(String upc) {
         SQLiteDatabase db = this.getReadableDatabase();
+        System.out.println("requesting Core Title on: "+ upc);
         Cursor cur = db.rawQuery("SELECT "+COL_DVD_CORE_TITLE+" FROM "+TBL_DVD+" WHERE "+ COL_DVD_QRCODE+ " IS "
                 +upc,null);
-        cur.moveToNext();
-        return cur.getString(0);
+        if(cur.getCount()==1)
+            return cur.getString(0);
+        return "null";
     }
 
     void updateDvd(String upc, TmdbSearchResponse response) {
+        if(response == null) {
+            Log.e("MainActivity","ImdbSearchResponse for upc "+upc+" was null! Ignoring.");
+            return;
+        }
+
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         Results res = response.getResults()[0];
@@ -333,5 +390,19 @@ class DatabaseHelper extends SQLiteOpenHelper {
         cv.put(COL_DVD_PLOT,res.getOverview());
         cv.put(COL_DVD_TMDB_ID,tmdbid);
         db.insert(TBL_DVD,null,cv);
+    }
+
+    public void eraseDb() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD);
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_CREDITS);
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_KEYWORDS);
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_LOCATION);
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_GENRE);
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD_CREDITS);
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD_KEYWORDS);
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD_LOCATION);
+        db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD_GENRE);
+        onCreate(db);
     }
 }
