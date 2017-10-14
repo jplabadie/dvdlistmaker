@@ -53,8 +53,6 @@ public class ReviewActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        et = (AutoCompleteTextView) findViewById(R.id.editLocationText);
-        et_button = (Button) findViewById(R.id.et_button);
         dbHelper = new DatabaseHelper(this);
         setContentView(R.layout.activity_review);
 
@@ -68,7 +66,8 @@ public class ReviewActivity extends AppCompatActivity{
         ListAdapter list_adapter =  new ArrayAdapter<MovieTuple>
                 (this,android.R.layout.simple_list_item_1,scans);
         elv.setAdapter(list_adapter);
-
+        et = (AutoCompleteTextView) findViewById(R.id.editLocationText);
+        et_button = (Button) findViewById(R.id.et_button);
         et_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
