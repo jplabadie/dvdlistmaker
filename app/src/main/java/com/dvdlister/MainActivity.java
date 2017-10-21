@@ -2,6 +2,7 @@ package com.dvdlister;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -10,13 +11,17 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ListFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,11 +42,13 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private DatabaseHelper dbHelper;
+    private static DatabaseHelper dbHelper;
     private TextView mTextMessage;
     private ListView listView;
     private Button cont_scan_btn, view_data, email_data_btn, erase_db_btn;
-    private ArrayList<MovieTuple> fresh_scans = new ArrayList<>();
+
+    static ArrayList<MovieMap> fresh_scans = new ArrayList<>();
+    static String cur_location = "";
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -105,6 +112,22 @@ public class MainActivity extends AppCompatActivity {
         cont_scan_btn.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View view){
+
+                AlertDialog.Builder loc = new AlertDialog.Builder(MainActivity.this);
+
+                final EditText input = new EditText(MainActivity.this);
+                loc.setView( input );
+                loc.setTitle("Set DVD Location");
+                loc.setMessage("Where are these DVD's stored?");
+                loc.setPositiveButton("Set",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                setCurrentLocation(input.getText().toString());
+                            }
+                        });
+
+                loc.show();
+
                 IntentIntegrator zxing_itegrator = new IntentIntegrator(activity);
                 zxing_itegrator.setDesiredBarcodeFormats( IntentIntegrator.ALL_CODE_TYPES );
                 zxing_itegrator.setPrompt("Scan");
@@ -143,6 +166,15 @@ public class MainActivity extends AppCompatActivity {
                 dbHelper.eraseDb();
             }
         });
+    }
+
+    void setCurrentLocation( String location ){
+        cur_location = location;
+        for(MovieMap m : fresh_scans){
+            dbHelper.updateDvdLocation(m.getUpc(),cur_location);
+        }
+        cur_location = "";
+        fresh_scans.clear();
     }
 
     @Override
@@ -194,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
             String core_title = dbHelper.getCoreTitleByUPC(upc);
 
             HttpRequestSearchTask search = new HttpRequestSearchTask();
-            search.execute(upc,core_title);// call to themoviedb API using core title for genres
+            search.execute(upc,core_title);// call to themoviedb API using core id for genres
         }
     }
 
@@ -206,10 +238,14 @@ public class MainActivity extends AppCompatActivity {
             try {
                 upc = strings[0];
                 title = strings[1];
+                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>" + upc);
+                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>" + title);
 
                 final String url = "https://api.themoviedb.org/3/search/movie" +
-                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US&query="+
-                        title +"&page=1&include_adult=true";
+                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US" +
+                        "&query="+ title +
+                        "&page=1" +
+                        "&include_adult=true";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -225,12 +261,13 @@ public class MainActivity extends AppCompatActivity {
             Results res = response.getResults()[0];
             String id = res.getId();
             dbHelper.updateDvd(upc, response );
-            HttpRequestMovieDetailsTask moviedb_details_api = new HttpRequestMovieDetailsTask();
-            moviedb_details_api.execute(upc,id);// call to themoviedb API using core title for genres
+
             HttpRequestCreditsTask moviedb_credits_api = new HttpRequestCreditsTask();
             HttpRequestKeywordsTask moviedb_keywords_api = new HttpRequestKeywordsTask();
-            moviedb_keywords_api.execute(upc,id); // call to themoviedb API using core title for keywords
-            moviedb_credits_api.execute(upc,id); // call to themoviedb API using core title for credits
+            HttpRequestMovieDetailsTask moviedb_details_api = new HttpRequestMovieDetailsTask();
+                moviedb_keywords_api.execute(upc,id); // call to themoviedb API using core id for keywords
+                moviedb_credits_api.execute(upc,id); // call to themoviedb API using core id for credits
+            moviedb_details_api.execute(upc,id);
         }
     }
     private class HttpRequestCreditsTask extends AsyncTask<String, Void, Credits> {
@@ -262,19 +299,20 @@ public class MainActivity extends AppCompatActivity {
 
     private class HttpRequestMovieDetailsTask extends AsyncTask<String, Void, MovieDetails> {
         private String upc = "";
-        private String title ="";
+        private String id ="";
         @Override
         protected MovieDetails doInBackground(String... strings) {
             try {
                 upc = strings[0];
-                title = strings[1];
+                id = strings[1];
 
-                final String url = "https://api.themoviedb.org/3/movie/"+title+
+                final String details_url = "https://api.themoviedb.org/3/movie/" + id +
                         "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US";
-                RestTemplate restTemplate = new RestTemplate();
-                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+                RestTemplate rest_temp_details = new RestTemplate();
+                rest_temp_details.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
-                return restTemplate.getForObject(url, MovieDetails.class);
+                return rest_temp_details.getForObject(details_url, MovieDetails.class);
+
             } catch (Exception e) {
                 Log.e("MainActivity", e.getMessage(), e);
             }
@@ -289,18 +327,20 @@ public class MainActivity extends AppCompatActivity {
 
     private class HttpRequestKeywordsTask extends AsyncTask<String, Void, Keywords> {
         private String upc = "";
-        private String title ="";
+        private String id ="";
+
         @Override
         protected Keywords doInBackground(String... strings) {
             try {
                 upc = strings[0];
-                title = strings[1];
+                id = dbHelper.getTmdbId(upc);
 
-                fresh_scans.add(new MovieTuple(upc,title));
+                MovieMap fs = new MovieMap(upc, dbHelper.getCoreTitleByUPC(upc));
+                System.out.println("ADD SCAN: " + fs.toString());
+                fresh_scans.add(fs);
 
-                final String url = "https://api.themoviedb.org/3/search/movie" +
-                        "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US&query="+
-                        title +"&page=1&include_adult=true";
+                final String url = "https://api.themoviedb.org/3/movie/" + id +
+                        "/keywords?api_key=3a18eb07897280fb9c416fe02b7ddac8";
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
@@ -330,6 +370,23 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
+
+    /**
+     * A placeholder fragment containing a simple view.
+     */
+    public static class PlaceholderFragment extends ListFragment {
+
+        public PlaceholderFragment() {
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+            return rootView;
+        }
+    }
+
     /**
      *
      * @param requestCode
@@ -337,22 +394,20 @@ public class MainActivity extends AppCompatActivity {
      * @param data
      */
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode,resultCode,data);
         if(result != null){
             if( result.getContents()==null ){
                 //Toast the user, then allow them to review the scan results
+
                 Toast.makeText(this,"Scanning Complete",Toast.LENGTH_LONG).show();
                 super.onActivityResult(requestCode, resultCode, data);
-                Intent review = new Intent( this, ReviewActivity.class );
-                review.putExtra("FreshScans",fresh_scans);
-                this.startActivity(review);
             }
             else{
                 String qrcode = result.getContents();
                 HttpRequestTitleTask upcite_api = new HttpRequestTitleTask();
 
-                upcite_api.execute(qrcode); //call upcite API for title and details using qrcode
+                upcite_api.execute(qrcode); //call upcite API for id and details using qrcode
 
                 Toast.makeText(this,qrcode,Toast.LENGTH_LONG).show();
                 final Activity activity = this;
@@ -366,6 +421,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
-
     }
+
+
 }
