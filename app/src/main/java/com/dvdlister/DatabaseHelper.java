@@ -122,10 +122,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
         db.execSQL( "CREATE VIEW " + TBL_DVD_VIEW + " AS " +
                 "SELECT " + TBL_DVD +"."+COL_DVD_QRCODE + " AS " + COL_DVD_QRCODE + "," +
-                "SELECT " + TBL_DVD +"."+COL_DVD_CORE_TITLE + " AS " + COL_DVD_CORE_TITLE + "," +
-                "SELECT " + TBL_DVD_LOCATION +"."+COL_LOCATION + " AS " + COL_LOCATION +"," +
+                TBL_DVD +"."+COL_DVD_CORE_TITLE + " AS " + COL_DVD_CORE_TITLE + "," +
+                TBL_DVD_LOCATION +"."+COL_LOCATION + " AS " + COL_LOCATION +"," +
+                TBL_DVD+"."+COL_DVD_QRCODE + " AS _ID "+
                 "FROM " +TBL_DVD + " LEFT JOIN "+ TBL_DVD_LOCATION+
-                    " ON "+TBL_DVD+"."+COL_DVD_QRCODE +"="+TBL_DVD_LOCATION+"."+COL_DVD_QRCODE);
+                    " ON "+TBL_DVD+"."+COL_DVD_QRCODE +"="+TBL_DVD_LOCATION+"."+COL_DVD_QRCODE );
     }
 
     /**
@@ -137,6 +138,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      */
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
+        db.execSQL( "DROP VIEW IF EXISTS " + TBL_DVD_VIEW);
         db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD);
         db.execSQL( "DROP TABLE IF EXISTS " + TBL_CREDITS);
         db.execSQL( "DROP TABLE IF EXISTS " + TBL_KEYWORDS);
@@ -235,7 +237,8 @@ class DatabaseHelper extends SQLiteOpenHelper {
             return;
         }
         String core_title = response.getTitle();
-        core_title.replaceAll("(\\(.*\\))","");
+        core_title =core_title.replaceAll("\\(+.*\\)","");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Title replaced: " + core_title);
         core_title = core_title.replace("Deluxe Edition", "");
         core_title = core_title.replace("Special Edition","");
         core_title = core_title.replace("Anniversary Edition","");
@@ -291,6 +294,17 @@ class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    String getTmdbId(String qrcode){
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cur = db.query( TBL_DVD,new String[]{COL_DVD_TMDB_ID},
+                COL_DVD_QRCODE+" IS ? ",new String[]{qrcode},null,null,null );
+        if(cur.getCount()==1) {
+            cur.moveToFirst();
+            return cur.getString(0);
+        }
+        return null;
+    }
+
     /**
      *
      * @param qrcode
@@ -298,6 +312,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      */
     void updateDvd(String qrcode, MovieDetails movie_details) {
         if(movie_details == null) {
+            System.out.println("Movie Details were NUL!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             Log.e("MainActivity","MovieDetails for upc "+qrcode+" was null! Ignoring.");
             return;
         }
@@ -335,8 +350,8 @@ class DatabaseHelper extends SQLiteOpenHelper {
             cv_keywords.put(COL_KEYWORD,word.getName());
             cv_bridge.put(COL_DVD_QRCODE,qrcode);
             cv_bridge.put(COL_KEYWORD,word.getName());
-            db.insert(TBL_KEYWORDS,null,cv_keywords);
-            db.insert(TBL_DVD_KEYWORDS,null,cv_bridge);
+            db.insertWithOnConflict(TBL_KEYWORDS,null,cv_keywords,SQLiteDatabase.CONFLICT_IGNORE);
+            db.insertWithOnConflict(TBL_DVD_KEYWORDS,null,cv_bridge,SQLiteDatabase.CONFLICT_IGNORE);
             cv_keywords.clear();
             cv_bridge.clear();
         }
@@ -355,8 +370,16 @@ class DatabaseHelper extends SQLiteOpenHelper {
         cv_location.put(COL_LOCATION,location);
         cv_bridge.put(COL_DVD_QRCODE,qrcode);
         cv_bridge.put(COL_LOCATION,location);
-        db.insert(TBL_LOCATION,null,cv_location);
-        db.insert(TBL_DVD_LOCATION,null,cv_bridge);
+
+        //TODO: This is wasteful, we should check to see if the location exists
+        // and then fork on an if-else instead of trying and catching
+        try{
+            db.insertOrThrow(TBL_LOCATION,null,cv_location);
+            db.insertOrThrow(TBL_DVD_LOCATION,null,cv_bridge);
+        }
+        catch (Exception e){
+            db.update(TBL_DVD_LOCATION,cv_bridge, COL_DVD_QRCODE + " IS ? ", new String[]{qrcode});
+        }
     }
 
     String getTitleByUPC(String upc) {
@@ -370,10 +393,12 @@ class DatabaseHelper extends SQLiteOpenHelper {
     String getCoreTitleByUPC(String upc) {
         SQLiteDatabase db = this.getReadableDatabase();
         System.out.println("requesting Core Title on: "+ upc);
-        Cursor cur = db.rawQuery("SELECT "+COL_DVD_CORE_TITLE+" FROM "+TBL_DVD+" WHERE "+ COL_DVD_QRCODE+ " IS "
-                +upc,null);
-        if(cur.getCount()==1)
+        Cursor cur = db.query(TBL_DVD_VIEW,new String[]{COL_DVD_CORE_TITLE},
+                COL_DVD_QRCODE+" IS ? ",new String[]{upc},null,null,null);
+        if(cur.getCount()==1) {
+            cur.moveToFirst();
             return cur.getString(0);
+        }
         return "null";
     }
 
@@ -389,11 +414,12 @@ class DatabaseHelper extends SQLiteOpenHelper {
         String tmdbid = res.getId();
         cv.put(COL_DVD_PLOT,res.getOverview());
         cv.put(COL_DVD_TMDB_ID,tmdbid);
-        db.insert(TBL_DVD,null,cv);
+        db.update(TBL_DVD,cv,COL_DVD_QRCODE+" IS ? ",new String[]{upc});
     }
 
     public void eraseDb() {
         SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL( "DROP VIEW IF EXISTS " + TBL_DVD_VIEW);
         db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD);
         db.execSQL( "DROP TABLE IF EXISTS " + TBL_CREDITS);
         db.execSQL( "DROP TABLE IF EXISTS " + TBL_KEYWORDS);
