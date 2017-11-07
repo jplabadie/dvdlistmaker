@@ -1,4 +1,4 @@
-package com.dvdlister;
+package com.dvdlister.utils;
 
 import java.util.HashMap;
 
@@ -10,7 +10,7 @@ public class MovieMap extends HashMap<String, String> {
     private String upc="";
     private String title="";
 
-    MovieMap(String upc, String title){
+    public MovieMap(String upc, String title){
         this.upc = upc;
         this.title = title;
     }
@@ -19,7 +19,7 @@ public class MovieMap extends HashMap<String, String> {
         return title;
     }
 
-    String getUpc(){
+    public String getUpc(){
         return upc;
     }
 
