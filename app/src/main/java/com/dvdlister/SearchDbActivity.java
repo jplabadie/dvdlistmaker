@@ -9,15 +9,20 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Toast;
+
+import com.dvdlister.utils.UserDataHelper;
 
 /**
  * Created by Jean-Paul on 10/23/2017.
  */
 
-public class SearchDb extends Activity {
+public class SearchDbActivity extends Activity {
 
     private static DatabaseHelper dbHelper;
+    private ListView lv;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -47,7 +52,7 @@ public class SearchDb extends Activity {
                     try {
                         startActivity(Intent.createChooser(i, "Send mail..."));
                     } catch (android.content.ActivityNotFoundException ex) {
-                        Toast.makeText(SearchDb.this, "There are no email clients " +
+                        Toast.makeText(SearchDbActivity.this, "There are no email clients " +
                                 "installed.", Toast.LENGTH_SHORT).show();
                     }
                     return true;
@@ -59,8 +64,10 @@ public class SearchDb extends Activity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dbHelper = new DatabaseHelper(this);
         setContentView(R.layout.search_db);
+
+        lv = (ListView) findViewById(R.id.search_results);
+        dbHelper = new DatabaseHelper(this);
 
         String[] PERMISSIONS_STORAGE = {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -73,6 +80,9 @@ public class SearchDb extends Activity {
         );
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-        final Activity activity = this;
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,
+                dbHelper.getTitleAndLocationAsList());
+        lv.setAdapter(adapter);
     }
 }
