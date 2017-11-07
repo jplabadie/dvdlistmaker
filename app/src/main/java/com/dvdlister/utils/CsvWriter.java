@@ -1,4 +1,4 @@
-package com.dvdlister;
+package com.dvdlister.utils;
 
 /**
  Copyright 2005 Bytecode Pty Ltd.
