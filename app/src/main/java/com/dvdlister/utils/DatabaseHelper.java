@@ -1,4 +1,4 @@
-package com.dvdlister;
+package com.dvdlister.utils;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -17,7 +17,6 @@ import com.dvdlister.pojos.MovieDetails;
 import com.dvdlister.pojos.Results;
 import com.dvdlister.pojos.TmdbSearchResponse;
 import com.dvdlister.pojos.Words;
-import com.dvdlister.utils.CsvWriter;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -30,7 +29,7 @@ import java.util.Arrays;
  * Provides key methods for saving and retrieving dvd meta data to the SQLite database
  */
 
-class DatabaseHelper extends SQLiteOpenHelper {
+public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "qrcodes.db";
 
@@ -63,7 +62,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TBL_DVD_LOCATION = "dvd_to_location";
 
 
-    DatabaseHelper(Context context) {
+    public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, 1);
     }
 
@@ -158,7 +157,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param qrcode the unique qrcode for the dvd
      * @return true indicates success
      */
-    boolean addDvd(String qrcode){
+    public boolean addDvd(String qrcode){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put( COL_DVD_QRCODE,qrcode );
@@ -171,7 +170,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * Provides a cursor package of data from the DVD Table View
      * @return the cursor data of the DVD Table in the db
      */
-    Cursor getPrimaryData(){
+    public Cursor getPrimaryData(){
         SQLiteDatabase db = this.getWritableDatabase();
         return db.query( TBL_DVD_VIEW,null,null,null,null,null,null ); //pull main table
     }
@@ -181,7 +180,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * Does not include description text.
      * @return the filepath of the output csv
      */
-    String exportData() {
+    public String exportData() {
         SQLiteDatabase db = this.getWritableDatabase();
 
         File exportDir = new File(Environment.getExternalStorageDirectory(), "");
@@ -226,7 +225,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * Updates an existing DVD entry with extra details obtained via internet API call
      * @param response a pojo populated by restful api call
      */
-    void updateDvd(Items response) {
+    public void updateDvd(Items response) {
         if(response == null) {
             Log.e("MainActivity","Items for updateDvd was null! Update failed.");
             return;
@@ -268,7 +267,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param qrcode
      * @param credits
      */
-    void updateDvd(String qrcode, Credits credits) {
+    public void updateDvd(String qrcode, Credits credits) {
         if( credits == null) {
             Log.e("MainActivity","Credits for upc "+qrcode+" was null! Ignoring.");
             return;
@@ -289,7 +288,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    String getTmdbId(String qrcode){
+    public String getTmdbId(String qrcode){
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cur = db.query( TBL_DVD,new String[]{COL_DVD_TMDB_ID},
                 COL_DVD_QRCODE+" IS ? ",new String[]{qrcode},null,null,null );
@@ -305,7 +304,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param qrcode
      * @param movie_details
      */
-    void updateDvd(String qrcode, MovieDetails movie_details) {
+    public void updateDvd(String qrcode, MovieDetails movie_details) {
         if(movie_details == null) {
             System.out.println("Movie Details were NUL!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             Log.e("MainActivity","MovieDetails for upc "+qrcode+" was null! Ignoring.");
@@ -331,7 +330,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param qrcode
      * @param keywords
      */
-    void updateDvd(String qrcode, Keywords keywords) {
+    public void updateDvd(String qrcode, Keywords keywords) {
 
         if(keywords == null || keywords.getKeywords() == null) {
             Log.e("MainActivity","Keywords for upc "+qrcode+" was null! Ignoring.");
@@ -357,7 +356,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
      * @param qrcode
      * @param location
      */
-    void updateDvdLocation(String qrcode, String location) {
+    public void updateDvdLocation(String qrcode, String location) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         Cursor cur = db.query(TBL_DVD_LOCATION,new String[]{COL_DVD_QRCODE,COL_LOCATION},COL_DVD_QRCODE+ " IS ?",
@@ -381,7 +380,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    String getTitleByUPC(String upc) {
+    public String getTitleByUPC(String upc) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cur = db.rawQuery("SELECT "+COL_DVD_TITLE+" FROM "+TBL_DVD+" WHERE "+ COL_DVD_QRCODE+ " IS "
                 +upc,null);
@@ -389,7 +388,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
         return cur.getString(0);
     }
 
-    String getCoreTitleByUPC(String upc) {
+    public String getCoreTitleByUPC(String upc) {
         SQLiteDatabase db = this.getReadableDatabase();
         System.out.println("requesting Core Title on: "+ upc);
         Cursor cur = db.query(TBL_DVD_VIEW,new String[]{COL_DVD_CORE_TITLE},
@@ -401,7 +400,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
         return "null";
     }
 
-    ArrayList<String> getTitleAndLocationAsList(){
+    public ArrayList<String> getTitleAndLocationAsList(){
         SQLiteDatabase db = this.getReadableDatabase();
         ArrayList<String> all = new ArrayList<>();
         Cursor cur = db.query(TBL_DVD_VIEW,new String[]{"*"},
@@ -414,7 +413,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
         return all;
     }
 
-    void updateDvd(String upc, TmdbSearchResponse response) {
+    public void updateDvd(String upc, TmdbSearchResponse response) {
         if(response == null) {
             Log.e("MainActivity","ImdbSearchResponse for upc "+upc+" was null! Ignoring.");
             return;
