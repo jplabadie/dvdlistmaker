@@ -16,9 +16,15 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
+
+            <Button
+                android:id="@+id/search_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Search Database" />
 
             <Button
                 android:id="@+id/cont_scan_btn"
@@ -27,29 +33,11 @@
                 android:text="Begin Continuous Scan" />
 
             <Button
-                android:id="@+id/view_data_btn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="View Data" />
-
-            <Button
                 android:id="@+id/delete_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Erase Database" />
 
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <LinearLayout
-                    android:id="@+id/review"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                </LinearLayout>
-            </ScrollView>
         </LinearLayout>
     </FrameLayout>
 
