@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -32,6 +31,10 @@ import com.dvdlister.pojos.MovieDetails;
 import com.dvdlister.pojos.Results;
 import com.dvdlister.pojos.TmdbSearchResponse;
 import com.dvdlister.pojos.UpcResponse;
+import com.dvdlister.utils.JobQueueService;
+import com.dvdlister.utils.MovieMap;
+import com.dvdlister.utils.NetUtilities;
+import com.dvdlister.utils.UserDataHelper;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -45,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private static DatabaseHelper dbHelper;
     private TextView mTextMessage;
     private ListView listView;
-    private Button cont_scan_btn, view_data, email_data_btn, erase_db_btn;
+    private Button cont_scan_btn, search_btn, erase_db_btn;
+    private JobQueueService job_service;
 
     static ArrayList<MovieMap> fresh_scans = new ArrayList<>();
     static String cur_location = "";
@@ -92,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         dbHelper = new DatabaseHelper(this);
+        job_service = new JobQueueService();
         setContentView(R.layout.activity_main);
 
 
@@ -108,73 +113,76 @@ public class MainActivity extends AppCompatActivity {
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         final Activity activity = this;
 
+        search_btn = (Button) findViewById(R.id.search_btn) ;
+        search_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view){
+                Intent intent = new Intent( MainActivity.this,SearchDbActivity.class);
+                startActivity(intent);
+            }
+        });
+
         cont_scan_btn = (Button) findViewById(R.id.cont_scan_btn);
         cont_scan_btn.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View view){
-
-                AlertDialog.Builder loc = new AlertDialog.Builder(MainActivity.this);
-
-                final EditText input = new EditText(MainActivity.this);
-                loc.setView( input );
-                loc.setTitle("Set DVD Location");
-                loc.setMessage("Where are these DVD's stored?");
-                loc.setPositiveButton("Set",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                setCurrentLocation(input.getText().toString());
-                            }
-                        });
-
-                loc.show();
-
-                IntentIntegrator zxing_itegrator = new IntentIntegrator(activity);
-                zxing_itegrator.setDesiredBarcodeFormats( IntentIntegrator.ALL_CODE_TYPES );
-                zxing_itegrator.setPrompt("Scan");
-                zxing_itegrator.setCameraId(0);
-                zxing_itegrator.setBeepEnabled(true);
-                zxing_itegrator.setBarcodeImageEnabled(false);
-                zxing_itegrator.initiateScan();
+                CheckNetworkTask cnt = new CheckNetworkTask();
+                cnt.execute("https://www.google.com");
             }
         });
 
         //listView = (ListView) findViewById(R.id.listView);
 
-        view_data = (Button) findViewById(R.id.view_data_btn);
-        view_data.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View view){
-                Cursor res = dbHelper.getPrimaryData();
-                if( res.getCount() != 0 ){
-                    StringBuffer buffer = new StringBuffer();
-
-                    while(res.moveToNext()){
-                        buffer.append("QrCode: " + res.getString(0)+"\n");
-                        buffer.append("Film Title: " + res.getString(1)+"\n");
-                        buffer.append("Location: " + res.getString(2)+"\n\n");
-                    }
-
-                    showMessage( "Data",buffer.toString() );
-                }
-            }
-        });
-
         erase_db_btn = (Button) findViewById(R.id.delete_btn);
-        erase_db_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dbHelper.eraseDb();
-            }
-        });
+//        erase_db_btn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                dbHelper.eraseDb();
+//            }
+//        });
     }
 
-    void setCurrentLocation( String location ){
-        cur_location = location;
-        for(MovieMap m : fresh_scans){
-            dbHelper.updateDvdLocation(m.getUpc(),cur_location);
+    private class CheckNetworkTask extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            try {
+                return NetUtilities.hasActiveInternetConnection( MainActivity.this );
+            } catch (Exception e) {
+                Log.e("MainActivity", e.getMessage(), e);
+            }
+            return false;
         }
-        cur_location = "";
-        fresh_scans.clear();
+
+        @Override
+        protected void onPostExecute(Boolean bool) {
+            if(bool) {
+
+                AlertDialog.Builder loc = new AlertDialog.Builder(MainActivity.this);
+
+                final EditText input = new EditText(MainActivity.this);
+                loc.setView(input);
+                loc.setTitle("Set DVD Location");
+                loc.setMessage("Where are these DVD's stored?");
+                loc.setPositiveButton("Set",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                cur_location = input.getText().toString();
+                                IntentIntegrator zxing_itegrator = new IntentIntegrator(MainActivity.this);
+                                zxing_itegrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES);
+                                zxing_itegrator.setPrompt("Scan");
+                                zxing_itegrator.setOrientationLocked(false);
+                                zxing_itegrator.setCameraId(0);
+                                zxing_itegrator.setBeepEnabled(true);
+                                zxing_itegrator.setBarcodeImageEnabled(false);
+                                zxing_itegrator.initiateScan();}
+                        });
+                loc.show();
+            }
+            else{
+                Toast.makeText(MainActivity.this, "You must maintain an active internet connection" +
+                        " when using this feature.", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -205,28 +213,44 @@ public class MainActivity extends AppCompatActivity {
         private String upc;
         @Override
         protected UpcResponse doInBackground(String... strings) {
+            upc = strings[0];
+            final String url = "https://api.upcitemdb.com/prod/trial/lookup?upc="+upc;
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
             try {
-                upc = strings[0];
-                final String url = "https://api.upcitemdb.com/prod/trial/lookup?upc="+upc;
-                RestTemplate restTemplate = new RestTemplate();
-                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+                Thread.sleep(1500);
                 UpcResponse response = restTemplate.getForObject(url, UpcResponse.class);
                 return response;
             } catch (Exception e) {
                 Log.e("MainActivity", e.getMessage(), e);
+                if( e.getMessage().contains("429")){
+                    try {
+                        Thread.sleep(4000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    return restTemplate.getForObject(url, UpcResponse.class);
+                }
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(UpcResponse response) {
-            dbHelper.addDvd(upc);
-            dbHelper.updateDvd(response.getItems()[0] );
+            try {
+                dbHelper.addDvd(upc);
+                dbHelper.updateDvdLocation(upc,cur_location);
+                dbHelper.updateDvd(response.getItems()[0]);
+                String core_title = dbHelper.getCoreTitleByUPC(upc);
 
-            String core_title = dbHelper.getCoreTitleByUPC(upc);
-
-            HttpRequestSearchTask search = new HttpRequestSearchTask();
-            search.execute(upc,core_title);// call to themoviedb API using core id for genres
+                HttpRequestSearchTask search = new HttpRequestSearchTask();
+                search.execute(upc, core_title);// call to themoviedb API using core id for genres
+            }
+            catch (NullPointerException e)
+            {
+                Log.e("Error",e.getMessage());
+                dbHelper.updateDvdLocation(upc,cur_location);
+            }
         }
     }
 
@@ -238,8 +262,6 @@ public class MainActivity extends AppCompatActivity {
             try {
                 upc = strings[0];
                 title = strings[1];
-                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>" + upc);
-                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>" + title);
 
                 final String url = "https://api.themoviedb.org/3/search/movie" +
                         "?api_key=3a18eb07897280fb9c416fe02b7ddac8&language=en-US" +
@@ -258,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(TmdbSearchResponse response) {
-            Results res = response.getResults()[0];
+            try{Results res = response.getResults()[0];
             String id = res.getId();
             dbHelper.updateDvd(upc, response );
 
@@ -268,6 +290,10 @@ public class MainActivity extends AppCompatActivity {
                 moviedb_keywords_api.execute(upc,id); // call to themoviedb API using core id for keywords
                 moviedb_credits_api.execute(upc,id); // call to themoviedb API using core id for credits
             moviedb_details_api.execute(upc,id);
+            }
+            catch (ArrayIndexOutOfBoundsException e){
+                Log.e("Error",e.getMessage());
+            }
         }
     }
     private class HttpRequestCreditsTask extends AsyncTask<String, Void, Credits> {
@@ -370,7 +396,6 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-
     /**
      * A placeholder fragment containing a simple view.
      */
@@ -401,19 +426,19 @@ public class MainActivity extends AppCompatActivity {
                 //Toast the user, then allow them to review the scan results
 
                 Toast.makeText(this,"Scanning Complete",Toast.LENGTH_LONG).show();
+                Toast.makeText(this,"Making Internet Data Requests...",Toast.LENGTH_LONG).show();
                 super.onActivityResult(requestCode, resultCode, data);
             }
             else{
                 String qrcode = result.getContents();
                 HttpRequestTitleTask upcite_api = new HttpRequestTitleTask();
-
-                upcite_api.execute(qrcode); //call upcite API for id and details using qrcode
+                upcite_api.execute(qrcode);
 
                 Toast.makeText(this,qrcode,Toast.LENGTH_LONG).show();
-                final Activity activity = this;
-                IntentIntegrator zxing_itegrator = new IntentIntegrator(activity);
+                IntentIntegrator zxing_itegrator = new IntentIntegrator(this);
                 zxing_itegrator.setDesiredBarcodeFormats( IntentIntegrator.ALL_CODE_TYPES );
                 zxing_itegrator.setPrompt("Scan");
+                zxing_itegrator.setOrientationLocked(false);
                 zxing_itegrator.setCameraId(0);
                 zxing_itegrator.setBeepEnabled(true);
                 zxing_itegrator.setBarcodeImageEnabled(false);
@@ -422,6 +447,5 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
 
 }
