@@ -3,7 +3,6 @@ package com.dvdlister;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
@@ -18,9 +17,11 @@ import com.dvdlister.pojos.MovieDetails;
 import com.dvdlister.pojos.Results;
 import com.dvdlister.pojos.TmdbSearchResponse;
 import com.dvdlister.pojos.Words;
+import com.dvdlister.utils.CsvWriter;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -162,14 +163,8 @@ class DatabaseHelper extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put( COL_DVD_QRCODE,qrcode );
 
-        try {
-            long result = db.insertOrThrow(TBL_DVD, null, cv);
-            return result != -1;
-        }
-        catch (SQLiteConstraintException e){
-            Log.e("MainActivity", e.getMessage(), e);
-            return false;
-        }
+        long result = db.insertWithOnConflict(TBL_DVD, null, cv,SQLiteDatabase.CONFLICT_IGNORE);
+        return result != -1;
     }
 
     /**
@@ -324,8 +319,8 @@ class DatabaseHelper extends SQLiteOpenHelper {
             cv_genre.put(COL_GENRE,genre.getName());
             cv_bridge.put(COL_DVD_QRCODE,qrcode);
             cv_bridge.put(COL_GENRE,genre.getName());
-            db.insert(TBL_GENRE,null,cv_genre);
-            db.insert(TBL_DVD_GENRE,null,cv_bridge);
+            db.insertWithOnConflict(TBL_GENRE,null,cv_genre,SQLiteDatabase.CONFLICT_IGNORE);
+            db.insertWithOnConflict(TBL_DVD_GENRE,null,cv_bridge,SQLiteDatabase.CONFLICT_IGNORE);
             cv_genre.clear();
             cv_bridge.clear();
         }
@@ -364,6 +359,13 @@ class DatabaseHelper extends SQLiteOpenHelper {
      */
     void updateDvdLocation(String qrcode, String location) {
         SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cur = db.query(TBL_DVD_LOCATION,new String[]{COL_DVD_QRCODE,COL_LOCATION},COL_DVD_QRCODE+ " IS ?",
+                new String[]{qrcode},null,null,null);
+        if(cur.getCount()>0){
+            db.delete(TBL_DVD_LOCATION,COL_DVD_QRCODE + " IS ?",new String[]{qrcode});
+        }
+
         ContentValues cv_location = new ContentValues();
         ContentValues cv_bridge = new ContentValues();
 
@@ -373,13 +375,10 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
         //TODO: This is wasteful, we should check to see if the location exists
         // and then fork on an if-else instead of trying and catching
-        try{
-            db.insertOrThrow(TBL_LOCATION,null,cv_location);
-            db.insertOrThrow(TBL_DVD_LOCATION,null,cv_bridge);
-        }
-        catch (Exception e){
-            db.update(TBL_DVD_LOCATION,cv_bridge, COL_DVD_QRCODE + " IS ? ", new String[]{qrcode});
-        }
+
+        db.insertWithOnConflict(TBL_LOCATION,null,cv_location,SQLiteDatabase.CONFLICT_IGNORE);
+        db.insertWithOnConflict(TBL_DVD_LOCATION,null,cv_bridge,SQLiteDatabase.CONFLICT_REPLACE);
+
     }
 
     String getTitleByUPC(String upc) {
@@ -400,6 +399,19 @@ class DatabaseHelper extends SQLiteOpenHelper {
             return cur.getString(0);
         }
         return "null";
+    }
+
+    ArrayList<String> getTitleAndLocationAsList(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        ArrayList<String> all = new ArrayList<>();
+        Cursor cur = db.query(TBL_DVD_VIEW,new String[]{"*"},
+                null,null,null,null,null);
+        if(cur.getCount() > 0 ){
+            while(cur.moveToNext()){
+                all.add(cur.getString(1)+ " " + cur.getString(2));
+            }
+        }
+        return all;
     }
 
     void updateDvd(String upc, TmdbSearchResponse response) {
