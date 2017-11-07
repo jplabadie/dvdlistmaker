@@ -1,4 +1,4 @@
-package com.dvdlister;
+package com.dvdlister.utils;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -10,7 +10,7 @@ import android.content.Context;
  */
 public class UserDataHelper {
 
-    static String getEmail(Context context) {
+    public static String getEmail(Context context) {
         AccountManager accountManager = AccountManager.get(context);
         Account account = getAccount(accountManager);
 
