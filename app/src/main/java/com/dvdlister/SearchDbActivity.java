@@ -9,8 +9,11 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import com.dvdlister.utils.DatabaseHelper;
@@ -82,8 +85,29 @@ public class SearchDbActivity extends Activity {
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,
+        ArrayAdapter<String> title_adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,
                 dbHelper.getTitleAndLocationAsList());
-        lv.setAdapter(adapter);
+        lv.setAdapter(title_adapter);
+
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(SearchDbActivity.this, "Click!", Toast.LENGTH_SHORT).show();
+                PopupMenu pm = new PopupMenu(SearchDbActivity.this, lv.getChildAt(position));
+                pm.getMenuInflater().inflate(R.menu.edit_db_item, pm.getMenu());
+                pm.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        if (item.getTitle() == "edit") {
+                            Toast.makeText(SearchDbActivity.this, "EDIT", Toast.LENGTH_SHORT).show();
+                            return false;
+                        }
+                        return true;
+                    }
+                });
+                pm.show();
+            }
+        });
+
     }
 }
