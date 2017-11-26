@@ -55,14 +55,10 @@ public class JobQueueService extends JobIntentService {
         cur_location=intent.getStringExtra("current_location");
         qrcode = intent.getStringExtra("qrcode");
         Log.i("SimpleJobIntentService", "Executing work: " + intent);
-        String label = intent.getStringExtra("label");
-        if (label == null) {
-            label = intent.toString();
-        }
-        toast("Executing: " + label);
+        toast("Requesting data on: " + qrcode);
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -98,7 +94,7 @@ public class JobQueueService extends JobIntentService {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
             try {
-                Thread.sleep(1200);
+                Thread.sleep(500);
                 UpcResponse response = restTemplate.getForObject(url, UpcResponse.class);
                 return response;
             } catch (Exception e) {
@@ -140,6 +136,7 @@ public class JobQueueService extends JobIntentService {
         @Override
         protected TmdbSearchResponse doInBackground(String... strings) {
             try {
+                Thread.sleep(500);
                 upc = strings[0];
                 title = strings[1];
 
@@ -182,6 +179,7 @@ public class JobQueueService extends JobIntentService {
         @Override
         protected Credits doInBackground(String... strings) {
             try {
+                Thread.sleep(500);
                 upc = strings[0];
                 title = strings[1];
 
@@ -209,6 +207,7 @@ public class JobQueueService extends JobIntentService {
         @Override
         protected MovieDetails doInBackground(String... strings) {
             try {
+                Thread.sleep(500);
                 upc = strings[0];
                 id = strings[1];
 
@@ -238,6 +237,7 @@ public class JobQueueService extends JobIntentService {
         @Override
         protected Keywords doInBackground(String... strings) {
             try {
+                Thread.sleep(500);
                 upc = strings[0];
                 id = dbHelper.getTmdbId(upc);
 
