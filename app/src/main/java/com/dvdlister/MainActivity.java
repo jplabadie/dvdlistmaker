@@ -1,7 +1,6 @@
 package com.dvdlister;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -100,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
         );
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-        final Activity activity = this;
 
         search_btn = (Button) findViewById(R.id.search_btn) ;
         search_btn.setOnClickListener(new View.OnClickListener() {
