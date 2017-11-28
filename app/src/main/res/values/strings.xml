@@ -10,4 +10,7 @@
     <string name="content_value">[content]</string>
     <string name="action_refresh">Refresh</string>
     <string name="tmd_api_key">3a18eb07897280fb9c416fe02b7ddac8</string>
+
+    <string name ="app_label">Search</string>
+    <string name ="search_hint">Type here to search the database</string>
 </resources>

@@ -5,6 +5,14 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <EditText
+        android:id="@+id/search_field"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        tools:text="Search" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="473dp"
@@ -23,14 +31,6 @@
 
         </LinearLayout>
     </ScrollView>
-
-    <EditText
-        android:id="@+id/search_field"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="textPersonName"
-        tools:text="Search" />
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"
