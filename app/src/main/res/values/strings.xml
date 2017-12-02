@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">DVD QC Scanner</string>
-    <string name="title_home">Scan</string>
-    <string name="title_dashboard">Review</string>
-    <string name="title_notifications">Send</string>
+    <string name="title_home">Home</string>
+    <string name="title_scan">Scan</string>
+    <string name="title_search">Search</string>
+    <string name="title_send">Send</string>
 
     <string name="id_label">The ID is</string>
     <string name="id_value">[id]</string>
@@ -13,4 +14,5 @@
 
     <string name ="app_label">Search</string>
     <string name ="search_hint">Type here to search the database</string>
+    <string name ="label">Search</string>
 </resources>
