@@ -445,6 +445,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return all;
     }
 
+    public ArrayList<String> getTitleAndLocationAsList( String genre ){
+        SQLiteDatabase db = this.getReadableDatabase();
+        ArrayList<String> genre_titles = new ArrayList<>();
+        ArrayList<String> genre_codes = new ArrayList<>();
+        Cursor cur_genre = db.query(TBL_DVD_GENRE,new String[]{COL_DVD_QRCODE},
+                COL_GENRE+" IS ?",new String[]{genre},null,null,null);
+        Cursor cur = db.query(TBL_DVD_VIEW,new String[]{"*"},
+                null,null,null,null,null);
+
+        while(cur_genre.moveToNext()){
+            genre_codes.add(cur.getString(0));
+        }
+        if(cur.getCount() > 0 ){
+            while(cur.moveToNext()){
+                String qrcode = cur.getString(0);
+                if(genre_codes.contains(qrcode))
+                    genre_titles.add(cur.getString(1)+ " " + cur.getString(2));
+            }
+        }
+        cur.close();
+        return genre_titles;
+    }
+
     public void updateDvd(String upc, TmdbSearchResponse response) {
         if(response == null) {
             Log.e("MainActivity","ImdbSearchResponse for upc "+upc+" was null! Ignoring.");
