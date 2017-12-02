@@ -24,19 +24,24 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.app.default_searchable"
+                android:value=".SearchDbActivity"/>
         </activity>
         <activity android:name=".SearchDbActivity"
             android:label="Search DVD DB">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH"/>
             </intent-filter>
-            <meta-data android:name="android.app.searchable"
+            <meta-data
+                android:name="android.app.searchable"
                 android:resource="@xml/searchable"/>
         </activity>
         <service android:name=".utils.JobQueueService"
             android:permission="android.permission.BIND_JOB_SERVICE">
-
         </service>
+        <meta-data android:name="android.app.default_searchable"
+            android:value=".SearchDbActivity"/>
+
 
     </application>
 
