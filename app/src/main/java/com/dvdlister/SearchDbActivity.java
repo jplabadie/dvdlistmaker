@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
@@ -24,9 +25,9 @@ import com.dvdlister.utils.UserDataHelper;
  */
 
 public class SearchDbActivity extends Activity {
-
     private static DatabaseHelper dbHelper;
     private ListView lv;
+    private LinearLayout genre_buttons;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -34,15 +35,17 @@ public class SearchDbActivity extends Activity {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
-                case R.id.navigation_scan:
-                    // mTextMessage.setText(R.string.title_home);
+                case R.id.navigation_home:
+                    Intent home = new Intent( SearchDbActivity.this,MainActivity.class);
+                    startActivity(home);
                     return true;
-                case R.id.navigation_review:
-                    //mTextMessage.setText(R.string.title_dashboard);
+                case R.id.navigation_scan:
+                    MainActivity main = new MainActivity();
+                    main.checkNetAndStartScan();
+                    return true;
+                case R.id.navigation_search:
                     return true;
                 case R.id.navigation_send:
-                    //mTextMessage.setText(R.string.title_notifications);
-
                     Intent i = new Intent(Intent.ACTION_SEND);
                     i.setType("message/rfc822");
                     String user_email = UserDataHelper.getEmail(getApplicationContext());
@@ -71,6 +74,7 @@ public class SearchDbActivity extends Activity {
         setContentView(R.layout.search_db);
 
         lv = (ListView) findViewById(R.id.search_results);
+        genre_buttons = (LinearLayout) findViewById(R.id.genre_layout);
         dbHelper = new DatabaseHelper(this);
 
         String[] PERMISSIONS_STORAGE = {
@@ -108,6 +112,14 @@ public class SearchDbActivity extends Activity {
                 pm.show();
             }
         });
+
+    }
+
+    protected void updateGenreButtons(){
+        dbHelper.getGenres();
+    }
+
+    protected void displayByGenre( String genre ){
 
     }
 }
