@@ -454,8 +454,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cur = db.query(TBL_DVD_VIEW,new String[]{"*"},
                 null,null,null,null,null);
 
-        while(cur_genre.moveToNext()){
-            genre_codes.add(cur.getString(0));
+        if(cur_genre.getCount() > 0 ){
+            while(cur_genre.moveToNext()){
+                genre_codes.add(cur.getString(0));
+            }
         }
         if(cur.getCount() > 0 ){
             while(cur.moveToNext()){
