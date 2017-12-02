@@ -213,6 +213,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
             csvWrite.close();
             curCSV.close();
+            loc.close();
         }
         catch(Exception sqlEx)
         {
@@ -319,7 +320,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COL_DVD_QRCODE+" IS ? ",new String[]{qrcode},null,null,null );
         if(cur.getCount()==1) {
             cur.moveToFirst();
-            return cur.getString(0);
+            String out = cur.getString(0);
+            cur.close();
+            return out;
         }
         return null;
     }
@@ -389,6 +392,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if(cur.getCount()>0){
             db.delete(TBL_DVD_LOCATION,COL_DVD_QRCODE + " IS ?",new String[]{qrcode});
         }
+        cur.close();
 
         ContentValues cv_location = new ContentValues();
         ContentValues cv_bridge = new ContentValues();
@@ -410,6 +414,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery("SELECT "+COL_DVD_TITLE+" FROM "+TBL_DVD+" WHERE "+ COL_DVD_QRCODE+ " IS "
                 +upc,null);
         cur.moveToNext();
+        cur.close();
         return cur.getString(0);
     }
 
@@ -422,6 +427,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cur.moveToFirst();
             return cur.getString(0);
         }
+        cur.close();
         return "null";
     }
 
@@ -435,6 +441,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 all.add(cur.getString(1)+ " " + cur.getString(2));
             }
         }
+        cur.close();
         return all;
     }
 
@@ -466,5 +473,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD_LOCATION);
         db.execSQL( "DROP TABLE IF EXISTS " + TBL_DVD_GENRE);
         onCreate(db);
+    }
+
+    public ArrayList<String> getGenres() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cur = db.query( TBL_GENRE,new String[]{COL_GENRE},null,null,null,null,null );
+        ArrayList<String> genres = new ArrayList<>();
+
+        if(cur.getCount() > 0 ){
+            while(cur.moveToNext()){
+                genres.add(cur.getString(0));
+            }
+        }
+        cur.close();
+        return genres;
     }
 }
