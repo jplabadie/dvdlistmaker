@@ -50,11 +50,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
-                case R.id.navigation_scan:
-                   // mTextMessage.setText(R.string.title_home);
+                case R.id.navigation_home:
                     return true;
-                case R.id.navigation_review:
-                    //mTextMessage.setText(R.string.title_dashboard);
+                case R.id.navigation_scan:
+                    checkNetAndStartScan();
+                    return true;
+                case R.id.navigation_search:
+                    Intent intent = new Intent( MainActivity.this,SearchDbActivity.class);
+                    startActivity(intent);
                     return true;
                 case R.id.navigation_send:
                     //mTextMessage.setText(R.string.title_notifications);
@@ -81,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
     };
+
+    public void checkNetAndStartScan() {
+        CheckNetworkTask cnt = new CheckNetworkTask();
+        cnt.execute("https://www.google.com");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
 //        });
     }
 
-    private class CheckNetworkTask extends AsyncTask<String, Void, Boolean> {
+    class CheckNetworkTask extends AsyncTask<String, Void, Boolean> {
         @Override
         protected Boolean doInBackground(String... strings) {
             try {
