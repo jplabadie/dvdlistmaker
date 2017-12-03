@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private static DatabaseHelper dbHelper;
     private TextView mTextMessage;
     private ListView listView;
-    private Button cont_scan_btn, search_btn, erase_db_btn;
+    private Button cont_scan_btn, search_btn;
 
     static ArrayList<MovieMap> fresh_scans = new ArrayList<>();
     static String cur_location = "";
@@ -125,16 +125,6 @@ public class MainActivity extends AppCompatActivity {
                 cnt.execute("https://www.google.com");
             }
         });
-
-        //listView = (ListView) findViewById(R.id.listView);
-
-        erase_db_btn = (Button) findViewById(R.id.delete_btn);
-//        erase_db_btn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                dbHelper.eraseDb();
-//            }
-//        });
     }
 
     class CheckNetworkTask extends AsyncTask<String, Void, Boolean> {
