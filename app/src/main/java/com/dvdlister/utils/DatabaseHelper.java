@@ -456,8 +456,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         if(cur_genre.getCount() > 0 ){
             while(cur_genre.moveToNext()){
-                genre_codes.add(cur.getString(0));
+                genre_codes.add(cur_genre.getString(0));
             }
+        }
+        else {
+            cur.close();
+            cur_genre.close();
+            return genre_titles;
         }
         if(cur.getCount() > 0 ){
             while(cur.moveToNext()){
@@ -466,6 +471,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     genre_titles.add(cur.getString(1)+ " " + cur.getString(2));
             }
         }
+        cur_genre.close();
         cur.close();
         return genre_titles;
     }
