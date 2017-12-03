@@ -125,6 +125,19 @@ public class MainActivity extends AppCompatActivity {
                 cnt.execute("https://www.google.com");
             }
         });
+
+        try {
+            String start_task = getIntent().getExtras().getString("start");
+            if (start_task != null) {
+                if (start_task.equalsIgnoreCase("scan")) {
+                    CheckNetworkTask cnt = new CheckNetworkTask();
+                    cnt.execute("https://www.google.com");
+                }
+            }
+        }
+        catch (NullPointerException e){
+            e.getMessage();
+        }
     }
 
     class CheckNetworkTask extends AsyncTask<String, Void, Boolean> {
@@ -141,9 +154,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Boolean bool) {
             if(bool) {
-
                 AlertDialog.Builder loc = new AlertDialog.Builder(MainActivity.this);
-
                 final EditText input = new EditText(MainActivity.this);
                 loc.setView(input);
                 loc.setTitle("Set DVD Location");
