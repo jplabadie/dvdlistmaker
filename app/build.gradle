@@ -39,4 +39,5 @@ dependencies {
     compile 'org.springframework.android:spring-android-rest-template:1.0.1.RELEASE'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.1'
     compile 'com.android.support:support-compat:26.1.0'
+    compile 'com.github.nex3z:FlowLayout:v1.1.0'
 }
