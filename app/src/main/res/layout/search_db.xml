@@ -1,54 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
-        android:id="@+id/search_field"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="textPersonName"
-        tools:text="Search" />
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="344dp"
-        android:scrollbarStyle="insideInset"
-        android:visibility="visible">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <ListView
-                android:id="@+id/search_results"
-                android:layout_width="match_parent"
-                android:layout_height="345dp" />
-        </LinearLayout>
-    </ScrollView>
-
-    <com.nex3z.flowlayout.FlowLayout
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/genre_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:flChildSpacing="1dp"
-        app:flChildSpacingForLastRow="align"
-        app:flRowSpacing=".5dp">
-
-    </com.nex3z.flowlayout.FlowLayout>
-
-
-    <android.support.design.widget.BottomNavigationView
-        android:id="@+id/navigation"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="bottom"
-        android:background="?android:attr/windowBackground"
-        app:menu="@menu/navigation" />
+        android:orientation="vertical">
 
-</LinearLayout>
+        <EditText
+            android:id="@+id/search_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textPersonName"
+            tools:text="Search" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="378dp"
+            android:scrollbarStyle="insideInset"
+            android:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <ListView
+                    android:id="@+id/search_results"
+                    android:layout_width="match_parent"
+                    android:layout_height="358dp" />
+            </LinearLayout>
+        </ScrollView>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.nex3z.flowlayout.FlowLayout
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/genre_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flChildSpacing="1dp"
+                app:flChildSpacingForLastRow="align"
+                app:flRowSpacing=".5dp"/>
+
+        </ScrollView>
+
+        <android.support.design.widget.BottomNavigationView
+            android:id="@+id/navigation"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="bottom"
+            android:background="?android:attr/windowBackground"
+            app:menu="@menu/navigation" />
+
+    </LinearLayout>
+
+
+
+</ScrollView>
