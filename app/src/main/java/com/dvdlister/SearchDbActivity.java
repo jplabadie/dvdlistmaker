@@ -13,13 +13,13 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import com.dvdlister.utils.DatabaseHelper;
 import com.dvdlister.utils.UserDataHelper;
+import com.nex3z.flowlayout.FlowLayout;
 
 import java.util.ArrayList;
 
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 public class SearchDbActivity extends Activity {
     private static DatabaseHelper dbHelper;
     private ListView lv;
-    private LinearLayout genre_buttons;
+    private FlowLayout genre_buttons;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -77,7 +77,7 @@ public class SearchDbActivity extends Activity {
         setContentView(R.layout.search_db);
 
         lv = (ListView) findViewById(R.id.search_results);
-        genre_buttons = (LinearLayout) findViewById(R.id.genre_layout);
+        genre_buttons = (FlowLayout) findViewById(R.id.genre_layout);
         dbHelper = new DatabaseHelper(this);
 
         String[] PERMISSIONS_STORAGE = {
@@ -99,17 +99,27 @@ public class SearchDbActivity extends Activity {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(SearchDbActivity.this, "Click!", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(SearchDbActivity.this, "Click!", Toast.LENGTH_SHORT).show();
                 PopupMenu pm = new PopupMenu(SearchDbActivity.this, lv.getChildAt(position));
                 pm.getMenuInflater().inflate(R.menu.edit_db_item, pm.getMenu());
                 pm.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
-                        if (item.getTitle() == "edit") {
-                            Toast.makeText(SearchDbActivity.this, "EDIT", Toast.LENGTH_SHORT).show();
-                            return false;
+                        String title = (String) item.getTitle();
+                        if (title.equalsIgnoreCase("edit")) {
+
+                            return true;
                         }
-                        return true;
+                        else if(title.equalsIgnoreCase("delete")){
+                            return true;
+                        }
+                        else if(title.equalsIgnoreCase("move")){
+                            return true;
+                        }
+                        else if(title.equalsIgnoreCase("details")){
+                            return true;
+                        }
+                        return false;
                     }
                 });
                 pm.show();
@@ -120,6 +130,15 @@ public class SearchDbActivity extends Activity {
 
     protected void updateGenreButtons(){
         ArrayList<String> genres = dbHelper.getGenres();
+        Button all = new Button(this);
+        all.setText((String)"any");
+        all.setOnClickListener(new View.OnClickListener() {
+               @Override
+               public void onClick(View view){
+                   displayByGenre("any");
+               }
+        });
+        genre_buttons.addView(all);
         for(String g: genres){
             final Button button = new Button(this);
             button.setText(g);
@@ -134,8 +153,15 @@ public class SearchDbActivity extends Activity {
     }
 
     protected void displayByGenre( String genre ){
-        ArrayAdapter<String> title_adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,
-                dbHelper.getTitleAndLocationAsList(genre));
+        ArrayAdapter<String> title_adapter;
+        if( genre.equalsIgnoreCase("any")){
+            title_adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,
+                    dbHelper.getTitleAndLocationAsList());
+        }
+        else{
+            title_adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,
+                    dbHelper.getTitleAndLocationAsList(genre));
+        }
         lv.setAdapter(title_adapter);
     }
 }
