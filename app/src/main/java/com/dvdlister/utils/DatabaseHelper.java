@@ -406,7 +406,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         db.insertWithOnConflict(TBL_LOCATION,null,cv_location,SQLiteDatabase.CONFLICT_IGNORE);
         db.insertWithOnConflict(TBL_DVD_LOCATION,null,cv_bridge,SQLiteDatabase.CONFLICT_REPLACE);
-
     }
 
     public String getTitleByUPC(String upc) {
@@ -431,6 +430,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return "null";
     }
 
+    public void updateDvd(String qrcode, String title, String location){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        ContentValues cv2 = new ContentValues();
+        cv.put(COL_DVD_CORE_TITLE,title);
+        cv2.put(COL_LOCATION,location);
+        int update1 = db.update(TBL_DVD,cv,COL_DVD_QRCODE+" IS ? ",new String[]{qrcode});
+        int update2 = db.update(TBL_DVD_LOCATION,cv2, COL_DVD_QRCODE+" IS ? ",new String[]{qrcode});
+        Log.e("UPDATER","!!!!!!!!!!!!! "+ qrcode +" "+title+ " "+location+" "+ update1 +" : " +update2);
+    }
+
     public ArrayList<String> getTitleAndLocationAsList(){
         SQLiteDatabase db = this.getReadableDatabase();
         ArrayList<String> all = new ArrayList<>();
@@ -438,7 +448,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 null,null,null,null,null);
         if(cur.getCount() > 0 ){
             while(cur.moveToNext()){
-                all.add(cur.getString(1)+ " " + cur.getString(2));
+                all.add(cur.getString(0)+" "+ cur.getString(1)+ " " + cur.getString(2));
             }
         }
         cur.close();
@@ -468,7 +478,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             while(cur.moveToNext()){
                 String qrcode = cur.getString(0);
                 if(genre_codes.contains(qrcode))
-                    genre_titles.add(cur.getString(1)+ " " + cur.getString(2));
+                    genre_titles.add(cur.getString(0)+" "+ cur.getString(1)+ " " + cur.getString(2));
             }
         }
         cur_genre.close();
