@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
                     checkNetAndStartScan();
                     return true;
                 case R.id.navigation_search:
-                    Intent intent = new Intent( MainActivity.this,SearchDbActivity.class);
+                    Intent intent = new Intent( MainActivity.this,SearchDbActivity.class );
                     startActivity(intent);
                     return true;
                 case R.id.navigation_send:
@@ -144,7 +144,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(String... strings) {
             try {
-                return NetUtilities.hasActiveInternetConnection( MainActivity.this );
+                boolean con = NetUtilities.hasActiveInternetConnection( MainActivity.this );
+                if(!con)
+                    Toast.makeText(MainActivity.this, "Network Connection Required!", Toast.LENGTH_LONG).show();
+                return true;
             } catch (Exception e) {
                 Log.e("MainActivity", e.getMessage(), e);
             }
@@ -160,18 +163,18 @@ public class MainActivity extends AppCompatActivity {
                 loc.setTitle("Set DVD Location");
                 loc.setMessage("Where are these DVD's stored?");
                 loc.setPositiveButton("Set",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                cur_location = input.getText().toString();
-                                IntentIntegrator zxing_itegrator = new IntentIntegrator(MainActivity.this);
-                                zxing_itegrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES);
-                                zxing_itegrator.setPrompt("Scan");
-                                zxing_itegrator.setOrientationLocked(false);
-                                zxing_itegrator.setCameraId(0);
-                                zxing_itegrator.setBeepEnabled(true);
-                                zxing_itegrator.setBarcodeImageEnabled(false);
-                                zxing_itegrator.initiateScan();}
-                        });
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            cur_location = input.getText().toString();
+                            IntentIntegrator zxing_itegrator = new IntentIntegrator(MainActivity.this);
+                            zxing_itegrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES);
+                            zxing_itegrator.setPrompt("Scan");
+                            zxing_itegrator.setOrientationLocked(false);
+                            zxing_itegrator.setCameraId(0);
+                            zxing_itegrator.setBeepEnabled(true);
+                            zxing_itegrator.setBarcodeImageEnabled(false);
+                            zxing_itegrator.initiateScan();}
+                });
                 loc.show();
             }
             else{
@@ -276,5 +279,4 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
 }
