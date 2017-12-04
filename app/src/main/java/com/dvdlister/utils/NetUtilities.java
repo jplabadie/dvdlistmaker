@@ -34,7 +34,7 @@ public class NetUtilities {
                 urlc.connect();
                 return (urlc.getResponseCode() == 200);
             } catch (IOException e) {
-                Log.e(LOG_TAG, "Error checking internet connection", e);
+                Log.e(LOG_TAG, "Error checking internet connection");
             }
         } else {
             Log.d(LOG_TAG, "No network available!");
