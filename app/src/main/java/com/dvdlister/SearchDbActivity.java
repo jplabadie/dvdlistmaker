@@ -8,21 +8,16 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupMenu;
-import android.widget.PopupWindow;
-import android.widget.TextView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.dvdlister.utils.DatabaseHelper;
+import com.dvdlister.utils.SearchArrayAdapter;
 import com.dvdlister.utils.UserDataHelper;
 import com.nex3z.flowlayout.FlowLayout;
 
@@ -35,6 +30,7 @@ import java.util.ArrayList;
 public class SearchDbActivity extends Activity {
     private static DatabaseHelper dbHelper;
     private ListView lv;
+    private RelativeLayout sv;
     private FlowLayout genre_buttons;
     private EditText search_text;
 
@@ -47,11 +43,13 @@ public class SearchDbActivity extends Activity {
                 case R.id.navigation_home:
                     Intent home = new Intent( SearchDbActivity.this,MainActivity.class);
                     startActivity(home);
+                    finish();
                     return true;
                 case R.id.navigation_scan:
                     Intent main = new Intent( SearchDbActivity.this,MainActivity.class);
                     main.putExtra("start","scan");
                     startActivity(main);
+                    finish();
                     return true;
                 case R.id.navigation_search:
                     return true;
@@ -84,6 +82,7 @@ public class SearchDbActivity extends Activity {
         setContentView(R.layout.search_db);
 
         lv = (ListView) findViewById(R.id.search_results);
+        sv = (RelativeLayout) findViewById(R.id.search_db_lin);
         genre_buttons = (FlowLayout) findViewById(R.id.genre_layout);
         dbHelper = new DatabaseHelper(this);
 
@@ -98,68 +97,15 @@ public class SearchDbActivity extends Activity {
         );
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
-//        ArrayAdapter<String> title_adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,
-//                dbHelper.getTitleAndLocationAsList());
-//        lv.setAdapter(title_adapter);
+        navigation.setSelectedItemId(R.id.navigation_search);
 
 
-
-        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //Toast.makeText(SearchDbActivity.this, "Click!", Toast.LENGTH_SHORT).show();
-                final PopupMenu pm = new PopupMenu(SearchDbActivity.this, lv.getChildAt(position));
-                pm.getMenuInflater().inflate(R.menu.edit_db_item, pm.getMenu());
-                pm.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        String title = (String) item.getTitle();
-                        if (title.equalsIgnoreCase("edit")) {
-                            final PopupWindow pw = new PopupWindow(SearchDbActivity.this);
-                            LinearLayout layout =
-                                    (LinearLayout) getLayoutInflater().inflate(R.layout.edit_db_item,lv);
-                            pw.setContentView(layout);
-                            TextView qrcode = (TextView) findViewById(R.id.qrcode);
-                            qrcode.setText("");
-                            Button save = (Button) findViewById(R.id.save);
-                            save.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-
-                                }
-                            });
-                            Button cancel = (Button) findViewById(R.id.cancel);
-                            cancel.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    pm.dismiss();
-                                }
-                            });
-                            pw.showAtLocation(lv, Gravity.BOTTOM, 20, 20);
-                            return true;
-                        }
-                        else if(title.equalsIgnoreCase("delete")){
-                            return true;
-                        }
-                        else if(title.equalsIgnoreCase("move")){
-                            return true;
-                        }
-                        else if(title.equalsIgnoreCase("details")){
-                            return true;
-                        }
-                        return false;
-                    }
-                });
-                pm.show();
-            }
-        });
+        final SearchArrayAdapter list_adapter = new SearchArrayAdapter(this,
+                dbHelper.getTitleAndLocationAsList(),sv);
+        lv.setAdapter(list_adapter);
         updateGenreButtons();
         search_text = new EditText(this);
         lv.requestFocus();
-        Button btn = new Button(this);
-        btn.setText("whut");
-        lv.addView(btn);
     }
 
     protected void updateGenreButtons(){
@@ -187,15 +133,15 @@ public class SearchDbActivity extends Activity {
     }
 
     protected void displayByGenre( String genre ){
-        ArrayAdapter<String> title_adapter;
+       SearchArrayAdapter list_adapter;
         if( genre.equalsIgnoreCase("any")){
-//            title_adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,
-//                    dbHelper.getTitleAndLocationAsList());
+            list_adapter = new SearchArrayAdapter(this,
+            dbHelper.getTitleAndLocationAsList(),sv);
         }
         else{
-//            title_adapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,
-//                    dbHelper.getTitleAndLocationAsList(genre));
+            list_adapter = new SearchArrayAdapter(this,
+            dbHelper.getTitleAndLocationAsList(genre),sv);
         }
-//        lv.setAdapter(title_adapter);
+        lv.setAdapter(list_adapter);
     }
 }
