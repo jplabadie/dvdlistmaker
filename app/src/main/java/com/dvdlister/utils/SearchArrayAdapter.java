@@ -28,6 +28,7 @@ public class SearchArrayAdapter extends ArrayAdapter<ArrayList<String>> {
     private final ArrayList<String> values;
     private final ViewGroup root;
     private DatabaseHelper dbHelper;
+    private ArrayAdapter<ArrayList<String>> saa;
 
     public SearchArrayAdapter(Context context, ArrayList<String> values, ViewGroup root) {
         super(context, -1, new ArrayList[]{values});
@@ -36,6 +37,7 @@ public class SearchArrayAdapter extends ArrayAdapter<ArrayList<String>> {
         this.values = values;
         this.root = root;
         dbHelper = new DatabaseHelper(context);
+        saa = this;
     }
 
     public String[] getDetails(int position){
@@ -55,7 +57,7 @@ public class SearchArrayAdapter extends ArrayAdapter<ArrayList<String>> {
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        LinearLayout listView = new LinearLayout(context);
+        final LinearLayout listView = new LinearLayout(context);
         listView.setOrientation(LinearLayout.VERTICAL);
         listView.setVerticalScrollBarEnabled(true);
 
@@ -116,6 +118,7 @@ public class SearchArrayAdapter extends ArrayAdapter<ArrayList<String>> {
                                     public void onClick(View v) {
                                         dbHelper.updateDvd(""+qcode,title.getText().toString(),
                                                 location.getText().toString());
+                                        saa.notifyDataSetChanged();
                                         pw.dismiss();
                                     }
                                 });

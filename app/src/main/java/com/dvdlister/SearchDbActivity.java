@@ -103,6 +103,7 @@ public class SearchDbActivity extends Activity {
         final SearchArrayAdapter list_adapter = new SearchArrayAdapter(this,
                 dbHelper.getTitleAndLocationAsList(),sv);
         lv.setAdapter(list_adapter);
+
         updateGenreButtons();
         search_text = new EditText(this);
         lv.requestFocus();
