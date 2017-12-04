@@ -1,37 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:alpha=".8"
+    android:background="@color/colorAccent"
+    android:elevation="10dp"
+    android:foreground="@color/colorPrimaryDark"
+    android:gravity="center"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/qrcode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView" />
+        android:text="qrcode:###########"
+        android:textStyle="italic" />
 
     <EditText
         android:id="@+id/edit_title"
+        style="@style/Widget.AppCompat.AutoCompleteTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="Name" />
-
-    <EditText
-        android:id="@+id/edit_base_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="Name" />
+        android:text="Title"
+        android:textCursorDrawable="@null"/>
 
     <EditText
         android:id="@+id/edit_location"
+        style="@style/Widget.AppCompat.Light.AutoCompleteTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="Name" />
+        android:text="Location"
+        android:textCursorDrawable="@null"/>
 
     <Button
         android:id="@+id/save"
